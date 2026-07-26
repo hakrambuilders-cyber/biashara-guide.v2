@@ -1,0 +1,11 @@
+{
+  "name": "biashara-guide-prototype",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "npx serve .",
+    "demo:text-channel": "node channels/text-adapter.js",
+    "check": "node --check app.js && node --check engine/core.js && node --check engine/knowledge.js && node --check engine/memory.js && node --check channels/text-adapter.js"
+  }
+}
