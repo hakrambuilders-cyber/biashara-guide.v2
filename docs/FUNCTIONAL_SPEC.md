@@ -59,7 +59,7 @@ This is not aspirational: `channels/text-adapter.js` in this repository is a wor
 | Module 7 — Risk Engine | Educates about exposure without frightening tone | `engine/core.js`: `computeRisk` (weighted factors + informational notes, never a bare "you are at risk") |
 | Module 8 — Progress Engine | Visual journey with a current step | `engine/core.js`: `getJourney`; rendered as the journey ladder in the Advisor Dashboard |
 | Module 9 — Memory Engine | Remembers just enough between visits | `engine/memory.js` (localStorage today; see §3.2 for the server-side evolution) |
-| Module 10 — Analytics Engine | Aggregate insight for TRA, not surveillance | Not yet instrumented in the prototype; contract defined in §12 |
+| Module 10 — Analytics Engine | Aggregate insight for TRA, not surveillance | `engine/analytics.js` (`buildTRAInsights`) — real aggregation logic (risk/sector/region/gap/notice/topic breakdowns), currently fed a synthetic population since no event-collection backend exists yet (§3.2); rendered in `app.js` as the TRA Officer Analytics View (`#/tra-insights`), which only ever displays aggregates, never the underlying records |
 
 ---
 
@@ -254,5 +254,6 @@ Reaffirming Product Constitution §12: this specification deliberately does not 
 | `engine/core.js` | §2 Decision Engine, §4, Modules 3/6/7/8 |
 | `engine/memory.js` | §3.2 client-side tier, Module 9 |
 | `channels/text-adapter.js` | §2 architecture proof, §7 |
-| `app.js` | Module 1 (web adapter) |
+| `engine/analytics.js` | Module 10, §12 |
+| `app.js` | Module 1 (web adapter), TRA Officer Analytics View (Module 10 UI) |
 | `styles.css` | Presentation layer only — contains no business logic by design |

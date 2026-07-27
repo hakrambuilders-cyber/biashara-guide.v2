@@ -22,6 +22,7 @@ No build step is required.
 - **Memory Engine, for real.** `engine/memory.js` persists just the profile/language/notice-type to `localStorage` so a returning user sees a "Welcome back" banner with their last visit and next step — and can erase it in one tap ("Forget my saved data").
 - **Deeper compliance logic.** Sector-specific licensing notes, an EFD-machine threshold check (TSh 14M/year), and a weighted risk model replace the single "next step" of v2.
 - **`styles.css` exists now.** (It was referenced by `index.html` but missing from the v2 prototype — the app rendered unstyled. Fixed.)
+- **TRA Officer Analytics View.** A new, clearly separated screen (`#/tra-insights`, linked from a distinct entry point at the bottom of Home) showing what TRA would actually see: national compliance-gap breakdowns, risk distribution, sector/region trends, notice types, and confusing-topic patterns — aggregate only, never an individual case file, powered by `engine/analytics.js`.
 
 ## Implemented journeys
 
@@ -32,11 +33,13 @@ No build step is required.
 - **TRA Notices**: notice-type selection, plain-language explanation, and a suggested action.
 - **Understand My Taxes**: an educational tax summary paired with a live illustrative Presumptive Tax + EFD-threshold calculator.
 - **Ask Anything**: a conversational assistant that answers FAQs, runs the real presumptive-tax calculator from free text, and — if it remembers your profile — leads with your actual next step instead of a generic reply.
+- **TRA Officer Analytics View**: national-level compliance gaps, risk distribution, sector/region breakdowns, notice types received, and the topics causing the most confusion — aggregate demo data only, never an individual case.
 
 ## Design tokens
 
-- Primary: `#F98822`
-- Secondary: `#07213A`
+- Primary: `#F9E50F` (yellow) — sampled from TRA's real public site (tra.go.tz) nav/CTA color
+- Secondary: `#0A0A0A` (near-black) — sampled from the same source
+- Logo: an original checkmark-badge mark (`brandMark()` in `app.js`), not a reproduction of TRA's registered logo — see the "Unofficial concept prototype" banner shown on every screen
 - Mobile-first frame: 480px reference width (desktop shows a framed device card)
 
 ## Code organization
@@ -47,6 +50,7 @@ No build step is required.
 - `engine/core.js` — the channel-agnostic brain: parsing, presumptive-tax calculator, compliance score, risk engine, next-best-action queue, journey, benefits, notice guidance, and the assistant's routing logic
 - `engine/knowledge.js` — static bilingual reference data (sectors, licensing notes, FAQs, notice copy) — the seed for the Tax-Law Registry described in the Functional Spec
 - `engine/memory.js` — localStorage persistence for the Memory Engine
+- `engine/analytics.js` — the Analytics Engine (Module 10): aggregation logic for the TRA Officer view, run today over a deterministic synthetic population (no backend exists yet to collect real events — see the Functional Spec §3.2) but scored by the *same* `engine/core.js` functions a real citizen gets
 - `channels/text-adapter.js` — a USSD/WhatsApp-style numbered-menu channel driven by `engine/core.js`; run with `npm run demo:text-channel`
 
 ## Compliance Advisor scoring (current rules)

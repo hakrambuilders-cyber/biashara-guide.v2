@@ -28,6 +28,7 @@ import {
 
 import { SECTORS } from './engine/knowledge.js';
 import { loadMemory, saveMemory, clearMemory, describeLastVisit } from './engine/memory.js';
+import { generateMockPopulation, buildTRAInsights } from './engine/analytics.js';
 
 // ---------------------------------------------------------------------------
 // State
@@ -58,6 +59,26 @@ const state = {
 };
 
 let analysisTimer = null;
+let traInsightsCache = null;
+
+function getTraInsights() {
+  if (!traInsightsCache) traInsightsCache = buildTRAInsights(generateMockPopulation());
+  return traInsightsCache;
+}
+
+const CHANNEL_LABEL = {
+  web: { sw: 'Wavuti (Web)', en: 'Web' },
+  ussd: { sw: 'USSD', en: 'USSD' },
+  whatsapp: { sw: 'WhatsApp', en: 'WhatsApp' }
+};
+
+const CHAT_TOPIC_LABEL = {
+  tin: { sw: 'Maswali kuhusu TIN', en: 'TIN questions' },
+  tax: { sw: 'Maswali kuhusu kodi/VAT', en: 'Tax / VAT questions' },
+  notice: { sw: 'Maswali kuhusu taarifa za TRA', en: 'TRA notice questions' },
+  benefits: { sw: 'Maswali kuhusu fursa/vivutio', en: 'Benefits / incentive questions' },
+  general: { sw: 'Maswali ya jumla', en: 'General questions' }
+};
 
 const BUSINESS_CATEGORIES = [
   { key: 'CHAKULA', emoji: '🍲' },
@@ -132,6 +153,19 @@ function fmtTsh(n) {
   return Math.round(n).toLocaleString();
 }
 
+// Original mark for Biashara Guide — a check-in-a-badge motif in the app's
+// own black/yellow palette. Not a reproduction of any organization's logo.
+function brandMarkSvg() {
+  return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Biashara Guide">
+    <rect x="4" y="4" width="92" height="92" rx="26" fill="#0A0A0A"/>
+    <path d="M28 52 L44 68 L74 34" stroke="#F9E50F" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </svg>`;
+}
+
+function brandMark(sizeClass = '') {
+  return `<div class="brand-mark ${sizeClass}">${brandMarkSvg()}</div>`;
+}
+
 function nav(path) {
   location.hash = '#/' + path;
 }
@@ -145,7 +179,7 @@ function topbar(route) {
   const showBack = route !== 'splash' && route !== 'welcome' && route !== 'home';
   return `
     <div class="topbar">
-      ${showBack ? `<button class="icon-btn" data-back="1" aria-label="Back">←</button>` : `<div class="brand-mark small">🇹🇿</div>`}
+      ${showBack ? `<button class="icon-btn" data-back="1" aria-label="Back">←</button>` : brandMark('small')}
       <button class="help" data-nav="chat">${state.lang === 'sw' ? 'Msaada' : 'Help'}</button>
     </div>`;
 }
@@ -174,6 +208,15 @@ function screen(className, innerHtml) {
   return `<div class="screen ${className}">${innerHtml}</div>`;
 }
 
+function barRow(label, percent, sublabel) {
+  return `
+    <div class="bar-row">
+      <div class="bar-row-top"><span>${esc(label)}</span><b>${percent}%</b></div>
+      <div class="bar-track"><i style="width:${percent}%;"></i></div>
+      ${sublabel ? `<span class="bar-sublabel">${esc(sublabel)}</span>` : ''}
+    </div>`;
+}
+
 function conceptBanner() {
   const label = state.lang === 'sw'
     ? '🧪 MFANO WA DHANA — Sio huduma rasmi ya TRA'
@@ -187,8 +230,8 @@ function conceptBanner() {
 
 function screenSplash() {
   return screen('splash', `
-    <div class="brand-mark">🇹🇿</div>
-    <p class="eyebrow" style="margin-top:18px;">TRA</p>
+    ${brandMark()}
+    <p class="eyebrow" style="margin-top:18px;">🇹🇿 TRA</p>
     <h1 style="margin-top:8px;">Biashara Guide</h1>
     <p class="lead">${state.lang === 'sw'
       ? 'Mwongozo rahisi wa haki, fursa na hatua zinazofuata kwa biashara yako.'
@@ -244,7 +287,7 @@ function screenHome() {
     ${topbar('home')}
     <div class="content">
       <div class="home-header">
-        <div class="brand-mark small">🇹🇿</div>
+        ${brandMark('small')}
         <h2>${state.lang === 'sw' ? 'Nianze wapi?' : 'Where should I start?'}</h2>
       </div>
       ${resumeBanner}
@@ -269,6 +312,14 @@ function screenHome() {
         </div>
       </div>
       <button class="link-btn" data-forget="1">${state.lang === 'sw' ? 'Futa taarifa zangu zilizohifadhiwa' : 'Forget my saved data'}</button>
+
+      <button class="officer-entry" data-nav="tra-insights">
+        <span class="officer-badge">TRA</span>
+        <div>
+          <strong>${state.lang === 'sw' ? 'Mtazamo wa Maafisa wa TRA' : 'TRA Officer Analytics View'}</strong>
+          <span>${state.lang === 'sw' ? 'Data ya jumla tu (mfano) — si taarifa za mtu mmoja' : 'Aggregate demo data only — never individual case files'}</span>
+        </div>
+      </button>
     </div>
   `);
 }
@@ -398,7 +449,7 @@ function screenAnalysis(nextRoute) {
     : ['Reviewing your business details', 'Identifying risk and next step', 'Preparing your summary'];
 
   return screen('analysis', `
-    <div class="brand-mark small">🇹🇿</div>
+    ${brandMark('small')}
     <h2 style="margin-top:20px;">${state.lang === 'sw' ? 'Tunachanganua...' : 'Analysing...'}</h2>
     <div class="analysis-box" style="width:100%;">
       ${items.map((label, i) => `
@@ -666,6 +717,116 @@ function screenAdvisor() {
     <div class="actions">
       <button class="btn btn-primary" data-nav="chat">${state.lang === 'sw' ? 'Uliza Zaidi' : 'Ask More'}</button>
       <button class="btn btn-secondary" data-nav="home">${state.lang === 'sw' ? 'Rudi Nyumbani' : 'Back Home'}</button>
+    </div>
+  `);
+}
+
+// --- TRA Officer Analytics View (aggregate only, demo data) -----------------
+
+function screenTraInsights() {
+  const insights = getTraInsights();
+  const sw = state.lang === 'sw';
+
+  return screen('', `
+    ${topbar('tra-insights')}
+    <div class="content officer-view">
+      <span class="chip officer-chip">🏛 ${sw ? 'MTAZAMO WA MAAFISA WA TRA' : 'TRA OFFICER VIEW'}</span>
+      <h2 style="margin-top:10px;">${sw ? 'Muhtasari wa Kitaifa (Mfano)' : 'National Analytics Overview (Demo)'}</h2>
+      <p class="lead">${sw
+        ? `Data ya jumla kutoka biashara ${insights.overview.total} za mfano — hakuna jina wala taarifa ya mtu binafsi hapa kwa makusudi.`
+        : `Aggregate data from ${insights.overview.total} simulated businesses — no individual name or case data appears here, by design.`}</p>
+
+      <div class="kpi-grid">
+        <div class="kpi-tile">
+          <span class="kpi-value">${insights.overview.total}</span>
+          <span class="kpi-label">${sw ? 'Biashara (mfano)' : 'Businesses (mock)'}</span>
+        </div>
+        <div class="kpi-tile">
+          <span class="kpi-value">${insights.overview.avgComplianceScore}%</span>
+          <span class="kpi-label">${sw ? 'Wastani wa Alama ya Utii' : 'Avg. Compliance Score'}</span>
+        </div>
+        <div class="kpi-tile ${insights.overview.highRiskShare > 30 ? 'warn' : ''}">
+          <span class="kpi-value">${insights.overview.highRiskShare}%</span>
+          <span class="kpi-label">${sw ? 'Wako Hatari Kubwa' : 'At High Risk'}</span>
+        </div>
+        <div class="kpi-tile">
+          <span class="kpi-value">${insights.overview.escalationRate}%</span>
+          <span class="kpi-label">${sw ? 'Wamerejeshwa TRA' : 'Escalated to TRA'}</span>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <span class="snapshot-label">${sw ? 'Kiwango cha Hatari (Kitaifa)' : 'Risk Level (National)'}</span>
+        <div class="risk-legend">
+          ${insights.riskBreakdown.map(r => `
+            <div class="risk-legend-item">
+              <span class="risk-chip risk-${r.level}">${t(RISK_LABEL[r.level])}</span>
+              <b>${r.pct}%</b>
+              <span class="step-time">${r.count} ${sw ? 'biashara' : 'businesses'}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <span class="snapshot-label">${sw ? 'Pengo Kubwa la Utii (Kitaifa)' : 'Biggest Compliance Gaps (National)'}</span>
+        ${insights.registrationGaps.map(g => barRow(t(g.label), g.pct, `${g.missing} ${sw ? 'biashara' : 'businesses'}`)).join('')}
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <span class="snapshot-label">${sw ? 'Hatua Zinazohitajika Zaidi' : 'Most Common Next-Best-Actions'}</span>
+        <p class="question-note">${sw ? 'Hii inaonyesha ni wapi wengi wanakwama — sio majina yao.' : 'Shows where most businesses are stuck — never who they are.'}</p>
+        ${insights.topNextActions.map(a => barRow(t(a.title), a.pct, `${a.count} ${sw ? 'biashara' : 'businesses'}`)).join('')}
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <span class="snapshot-label">${sw ? 'Mchanganuo kwa Sekta ya Biashara Iliyochaguliwa' : 'Breakdown by Business Sector Selected'}</span>
+        ${insights.sectorBreakdown.map(s => barRow(s.name, s.pct, `${s.count} ${sw ? 'biashara' : 'businesses'} · ${sw ? 'wastani wa alama' : 'avg score'} ${s.avgScore}%`)).join('')}
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <span class="snapshot-label">${sw ? 'Mchanganuo kwa Mkoa' : 'Breakdown by Region'}</span>
+        ${insights.regionBreakdown.map(r => barRow(r.region, r.pct, `${r.count} ${sw ? 'biashara' : 'businesses'} · ${sw ? 'pengo kubwa' : 'biggest gap'}: ${t(r.topGap)} · ${sw ? 'wastani' : 'avg'} ${r.avgScore}%`)).join('')}
+      </div>
+
+      ${insights.noticeBreakdown.length ? `
+        <div class="card" style="margin-top:14px;">
+          <span class="snapshot-label">${sw ? 'Aina za Taarifa Zilizopokelewa' : 'Notice Types Received'}</span>
+          ${insights.noticeBreakdown.map(n => barRow(n.type, n.pct, `${n.count} ${sw ? 'kesi' : 'cases'}`)).join('')}
+        </div>` : ''}
+
+      ${insights.chatTopicBreakdown.length ? `
+        <div class="card" style="margin-top:14px;">
+          <span class="snapshot-label">${sw ? 'Mada Zinazowatatiza Watu Zaidi' : 'Topics Causing the Most Confusion'}</span>
+          ${insights.chatTopicBreakdown.map(c => barRow(t(CHAT_TOPIC_LABEL[c.topic]), c.pct, `${c.count} ${sw ? 'mazungumzo' : 'conversations'}`)).join('')}
+        </div>` : ''}
+
+      <div class="card" style="margin-top:14px;">
+        <span class="snapshot-label">${sw ? 'Lugha na Njia Zinazotumika' : 'Language & Channel Split'}</span>
+        <div class="two-col">
+          <div>
+            <p class="question-note">${sw ? 'Lugha' : 'Language'}</p>
+            ${insights.languageSplit.map(l => barRow(l.lang === 'sw' ? 'Kiswahili' : 'English', l.pct)).join('')}
+          </div>
+          <div>
+            <p class="question-note">${sw ? 'Njia (Channel)' : 'Channel'}</p>
+            ${insights.channelSplit.map(c => barRow(t(CHANNEL_LABEL[c.channel]), c.pct)).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <span class="snapshot-label">${sw ? 'Uwezekano wa Vivutio' : 'Benefits Eligibility Snapshot'}</span>
+        <div class="benefit"><b>✓</b> ${insights.benefitsSnapshot.presumptiveEligiblePct}% ${sw ? 'wanastahili msamaha/kiwango maalum cha kodi ya makadirio' : 'are eligible for the presumptive tax exemption/flat rate'}</div>
+        <div class="benefit"><b>?</b> ${insights.benefitsSnapshot.growthCheckPct}% ${sw ? 'wanafaa kuangaliwa kwa rasilimali za ukuaji' : 'are worth checking for growth resources'}</div>
+      </div>
+
+      <p class="legal-note">${sw
+        ? 'Hii ni data ya mfano (iliyoundwa kwa hesabu, si watu halisi) inayoonyesha aina ya maarifa ambayo Analytics Engine ingetoa kwa TRA. Ufikiaji wa taarifa za kesi moja moja huhitaji sababu iliyorekodiwa — ona Functional Specification §9–§10.'
+        : 'This is synthetic demo data (generated, not real people) showing the kind of insight the Analytics Engine would give TRA. Access to any individual case requires a logged reason — see Functional Specification §9–§10.'}</p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-secondary" data-nav="home">${sw ? 'Rudi Nyumbani' : 'Back Home'}</button>
     </div>
   `);
 }
@@ -950,6 +1111,8 @@ function render() {
     case 'checkup-result': html = screenCheckupResult(); break;
 
     case 'advisor': html = screenAdvisor(); break;
+
+    case 'tra-insights': html = screenTraInsights(); break;
 
     case 'benefits-intro': html = screenBenefitsIntro(); break;
     case 'benefits': html = screenBenefits(); break;
