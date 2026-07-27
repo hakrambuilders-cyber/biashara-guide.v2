@@ -17,6 +17,7 @@ import {
   parseSector,
   calculateTRAPresumptiveTax,
   checkForFAQ,
+  classifyChatTopic,
   getBenefits,
   getTaxGuidance,
   getNoticeGuidance,
@@ -28,7 +29,7 @@ import {
 
 import { SECTORS } from './engine/knowledge.js';
 import { loadMemory, saveMemory, clearMemory, describeLastVisit } from './engine/memory.js';
-import { sendGuidanceEvent } from './engine/telemetry.js';
+import { sendGuidanceEvent, sendChatEvent } from './engine/telemetry.js';
 import { brandMarkSvg } from './brand.js';
 
 // ---------------------------------------------------------------------------
@@ -886,6 +887,12 @@ function handleChatSubmit(text) {
   if (!text) return;
 
   state.chat.messages.push({ sender: 'user', text });
+
+  // Anonymized topic-only signal for the officer console's "Topics Causing
+  // the Most Confusion" card — never the message text itself. A sales
+  // figure is itself a tax question regardless of what other words appear.
+  const chatTopic = parseSwahiliNumber(text) !== null ? 'tax' : classifyChatTopic(text);
+  sendChatEvent(chatTopic, state.lang);
 
   const faq = checkForFAQ(text);
   if (faq) {

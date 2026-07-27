@@ -390,6 +390,20 @@ export function getNoticeGuidance(type) {
 // Assistant reply — routing fallback, memory-aware when a profile exists
 // ---------------------------------------------------------------------------
 
+// Classifies a free-text chat message into one of a small fixed set of
+// topics, independent of which reply path answers it (FAQ, tax-figure
+// parse, or the fallback router below). Used both for routing and — see
+// engine/telemetry.js — for anonymized topic-only analytics (never the
+// message text itself).
+export function classifyChatTopic(text) {
+  const q = (text ?? '').toLowerCase();
+  if (q.includes('tin')) return 'tin';
+  if (q.includes('notice') || q.includes('taarifa') || q.includes('barua')) return 'notice';
+  if (q.includes('vat') || q.includes('kodi') || q.includes('tax')) return 'tax';
+  if (q.includes('benefit') || q.includes('fursa') || q.includes('incentive') || q.includes('msamaha')) return 'benefits';
+  return 'general';
+}
+
 export function getAssistantReply(question, profile = {}) {
   const q = question.toLowerCase();
   if (q.includes('tin')) return { answer: copy('TIN ni namba ya utambulisho wa mlipakodi. Kwa mwongozo binafsi, chagua \'Anzisha biashara\' au \'Nina biashara tayari\' ili tuanze na hali yako.', "A TIN is a taxpayer identification number. For tailored guidance, choose 'Start a Business' or 'I Have a Business' so we can begin with your situation."), route: 'category' };
