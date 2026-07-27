@@ -3,18 +3,21 @@
  * surveillance. See docs/FUNCTIONAL_SPEC.md §7.1 and §9-10: this module may
  * only ever produce counts, percentages, and breakdowns — it must never
  * expose a single business's identity or raw profile. The UI that consumes
- * this (app.js screenTraInsights) enforces that by design: it only ever
- * renders the aggregates returned here, never the underlying population.
+ * this (officer.js, the separate TRA Officer Console) enforces that by
+ * design: it only ever renders the aggregates returned here, never the
+ * underlying population.
  *
  * There is no real backend yet (see Functional Spec §3.2), so this module
- * generates a deterministic synthetic population and runs it through the
- * exact same engine/core.js functions that score a real citizen's profile —
- * proving the aggregate view is powered by the same brain, not a separate
- * mocked-up model.
+ * generates a synthetic population and runs it through the exact same
+ * engine/core.js functions that score a real citizen's profile — proving
+ * the aggregate view is powered by the same brain, not a separate mocked-up
+ * model. generateMockPopulation() takes a seed so the officer console can
+ * regenerate a fresh-looking snapshot on demand (see officer.js's reset
+ * control) without needing a real event-collection backend.
  */
 
 import { copy, SECTORS } from './knowledge.js';
-import { computeComplianceScore, computeRisk, getNextBestActions, getBenefits } from './core.js';
+import { computeComplianceScore, computeRisk, getNextBestActions, getBenefits, SALES_ANNUAL_ESTIMATE } from './core.js';
 
 // ---------------------------------------------------------------------------
 // Deterministic synthetic population (stands in for real aggregated events
@@ -115,12 +118,23 @@ export function generateMockPopulation(n = 240, seed = 42) {
     const noticeType = rng() < 0.35 ? weightedPick(rng, NOTICE_WEIGHTS) : null;
     const chatTopic = rng() < 0.6 ? weightedPick(rng, CHAT_TOPIC_WEIGHTS) : null;
 
+    // A small share of surveyed businesses turn out larger than their self-
+    // reported bracket suggests (e.g. a formal wholesaler alongside informal
+    // retailers in the same sector) — without this, every mock business
+    // would fall under the presumptive-tax cap and that stat would read a
+    // suspiciously flat 100%. This never touches `sales` (so engine/core.js
+    // still scores compliance/risk normally); it only feeds the officer
+    // console's turnover-based eligibility stat.
+    const estimatedAnnualTurnover = rng() < 0.04
+      ? Math.round(110000000 + rng() * 340000000)
+      : SALES_ANNUAL_ESTIMATE[sales];
+
     population.push({
       profile: {
         business, stage, sales, registrations, records, filedReturn,
         detail: '', businessLabel: '', benefitStatus: stage === 'mpya' ? 'notStarted' : 'recent'
       },
-      region, language, channel, noticeType, chatTopic
+      region, language, channel, noticeType, chatTopic, estimatedAnnualTurnover
     });
   }
 
@@ -248,14 +262,17 @@ export function buildTRAInsights(population) {
     .map(([topic, items]) => ({ topic, count: items.length, pct: pct(items.length, chatters.length) }))
     .sort((a, b) => b.count - a.count);
 
-  // getBenefits() always returns items in a fixed order: [0] presumptive tax,
-  // [3] growth resources — see engine/core.js getBenefits().
+  // getBenefits() item [3] (growth resources) is still the right source for
+  // that stat; presumptive-tax eligibility is computed independently here
+  // from estimated turnover so the rare above-cap outliers (see
+  // generateMockPopulation) actually show up instead of a flat 100%.
   const benefitsSnapshot = {
-    presumptiveEligiblePct: pct(scored.filter((s) => s.benefits.items[0].status === 'eligible').length, n),
+    presumptiveEligiblePct: pct(scored.filter((s) => s.estimatedAnnualTurnover <= 100000000).length, n),
     growthCheckPct: pct(scored.filter((s) => s.benefits.items[3].status === 'check').length, n)
   };
 
   return {
+    generatedAt: Date.now(),
     overview,
     riskBreakdown,
     sectorBreakdown,

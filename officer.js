@@ -33,12 +33,34 @@ function getInsights() {
   return insightsCache;
 }
 
+// Regenerates the anonymized aggregate snapshot with a fresh random seed —
+// simulates a new data pull without ever touching individual records (there
+// are none; see engine/analytics.js). Wired to the flag-camouflaged control
+// in the sidebar rather than an obvious "Reset" button.
+function resetInsights() {
+  insightsCache = buildTRAInsights(generateMockPopulation(240, Date.now()));
+}
+
 function t(copyObj) {
   return copyObj?.en ?? '';
 }
 
 function esc(str) {
   return String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function plural(n, word, pluralWord = `${word}s`) {
+  return `${n} ${n === 1 ? word : pluralWord}`;
+}
+
+function timeAgo(ts) {
+  const seconds = Math.floor((Date.now() - ts) / 1000);
+  if (seconds < 10) return 'just now';
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min${minutes === 1 ? '' : 's'} ago`;
+  const hours = Math.floor(minutes / 60);
+  return `${hours} hour${hours === 1 ? '' : 's'} ago`;
 }
 
 function barRow(label, percent, sublabel) {
@@ -82,7 +104,10 @@ function renderDashboard() {
   return `
     <div class="officer-app">
       <aside class="officer-sidebar">
-        <div class="brand-mark">${brandMarkSvg()}</div>
+        <div class="sidebar-top">
+          <div class="brand-mark">${brandMarkSvg()}</div>
+          <button class="flag-reset" id="flagReset" type="button" title="Refresh" aria-label="Refresh data snapshot">🇹🇿</button>
+        </div>
         <div class="sidebar-title">TRA Officer Console</div>
         <div class="sidebar-session">
           <span class="session-label">Signed in as</span>
@@ -95,6 +120,7 @@ function renderDashboard() {
       <main class="officer-main">
         <h1>National Analytics Overview <span class="chip officer-chip">DEMO DATA</span></h1>
         <p class="lead">Aggregate data from ${insights.overview.total} simulated businesses — no individual name or case data appears here, by design.</p>
+        <p class="snapshot-time">Data snapshot generated ${timeAgo(insights.generatedAt)}</p>
 
         <div class="kpi-grid">
           <div class="kpi-tile">
@@ -123,7 +149,7 @@ function renderDashboard() {
                 <div class="risk-legend-item">
                   <span class="risk-chip risk-${r.level}">${r.level[0].toUpperCase() + r.level.slice(1)} risk</span>
                   <b>${r.pct}%</b>
-                  <span class="step-time">${r.count} businesses</span>
+                  <span class="step-time">${plural(r.count, 'business', 'businesses')}</span>
                 </div>
               `).join('')}
             </div>
@@ -131,35 +157,35 @@ function renderDashboard() {
 
           <div class="card">
             <span class="snapshot-label">Biggest Compliance Gaps (National)</span>
-            ${insights.registrationGaps.map(g => barRow(t(g.label), g.pct, `${g.missing} businesses`)).join('')}
+            ${insights.registrationGaps.map(g => barRow(t(g.label), g.pct, plural(g.missing, 'business', 'businesses'))).join('')}
           </div>
 
           <div class="card">
             <span class="snapshot-label">Most Common Next-Best-Actions</span>
             <p class="question-note">Shows where most businesses are stuck — never who they are.</p>
-            ${insights.topNextActions.map(a => barRow(t(a.title), a.pct, `${a.count} businesses`)).join('')}
+            ${insights.topNextActions.map(a => barRow(t(a.title), a.pct, plural(a.count, 'business', 'businesses'))).join('')}
           </div>
 
           <div class="card">
             <span class="snapshot-label">Breakdown by Business Sector Selected</span>
-            ${insights.sectorBreakdown.map(s => barRow(s.name, s.pct, `${s.count} businesses · avg score ${s.avgScore}%`)).join('')}
+            ${insights.sectorBreakdown.map(s => barRow(s.name, s.pct, `${plural(s.count, 'business', 'businesses')} · avg score ${s.avgScore}%`)).join('')}
           </div>
 
           <div class="card">
             <span class="snapshot-label">Breakdown by Region</span>
-            ${insights.regionBreakdown.map(r => barRow(r.region, r.pct, `${r.count} businesses · biggest gap: ${t(r.topGap)} · avg ${r.avgScore}%`)).join('')}
+            ${insights.regionBreakdown.map(r => barRow(r.region, r.pct, `${plural(r.count, 'business', 'businesses')} · biggest gap: ${t(r.topGap)} · avg ${r.avgScore}%`)).join('')}
           </div>
 
           ${insights.noticeBreakdown.length ? `
             <div class="card">
               <span class="snapshot-label">Notice Types Received</span>
-              ${insights.noticeBreakdown.map(n => barRow(n.type, n.pct, `${n.count} cases`)).join('')}
+              ${insights.noticeBreakdown.map(n => barRow(n.type, n.pct, plural(n.count, 'case', 'cases'))).join('')}
             </div>` : ''}
 
           ${insights.chatTopicBreakdown.length ? `
             <div class="card">
               <span class="snapshot-label">Topics Causing the Most Confusion</span>
-              ${insights.chatTopicBreakdown.map(c => barRow(CHAT_TOPIC_LABEL[c.topic], c.pct, `${c.count} conversations`)).join('')}
+              ${insights.chatTopicBreakdown.map(c => barRow(CHAT_TOPIC_LABEL[c.topic], c.pct, plural(c.count, 'conversation', 'conversations'))).join('')}
             </div>` : ''}
 
           <div class="card">
@@ -210,6 +236,11 @@ function attachEvents() {
   document.addEventListener('click', (e) => {
     if (e.target.closest('#logoutBtn')) {
       session = null;
+      render();
+      return;
+    }
+    if (e.target.closest('#flagReset')) {
+      resetInsights();
       render();
     }
   });

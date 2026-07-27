@@ -274,14 +274,6 @@ function screenHome() {
         </div>
       </div>
       <button class="link-btn" data-forget="1">${state.lang === 'sw' ? 'Futa taarifa zangu zilizohifadhiwa' : 'Forget my saved data'}</button>
-
-      <a class="officer-entry" href="officer.html">
-        <span class="officer-badge">TRA</span>
-        <div>
-          <strong>${state.lang === 'sw' ? 'Console ya Maafisa wa TRA' : 'TRA Officer Console'}</strong>
-          <span>${state.lang === 'sw' ? 'Ukurasa tofauti wa desktop — unahitaji kuingia (mfano)' : 'Separate desktop app — requires sign-in (demo)'}</span>
-        </div>
-      </a>
     </div>
   `);
 }

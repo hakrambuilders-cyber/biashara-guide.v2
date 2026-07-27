@@ -154,7 +154,7 @@ h1, h2, h3, p { margin: 0; }
   letter-spacing: 0.08em;
   font-size: 12px;
   font-weight: 700;
-  color: var(--primary);
+  color: var(--secondary);
 }
 
 .lead { color: var(--muted); font-size: 15px; line-height: 1.5; margin-top: 6px; }
@@ -616,34 +616,6 @@ h2 { font-size: 21px; font-weight: 750; margin: 6px 0 14px; line-height: 1.3; }
   color: var(--secondary);
   font-size: 16px;
   flex-shrink: 0;
-}
-
-/* --- TRA Officer entry point (Home) ------------------------------------------------------ */
-
-.officer-entry {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border: 1px solid var(--border);
-  background: var(--secondary);
-  border-radius: var(--radius-md);
-  padding: 14px 16px;
-  text-align: left;
-  text-decoration: none;
-  margin-top: 14px;
-  width: 100%;
-}
-.officer-entry strong { display: block; color: #fff; font-size: 13.5px; }
-.officer-entry span { display: block; color: rgba(255,255,255,0.7); font-size: 11.5px; margin-top: 2px; line-height: 1.4; }
-.officer-badge {
-  flex-shrink: 0;
-  width: 34px; height: 34px;
-  border-radius: 10px;
-  background: rgba(255,255,255,0.12);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 800;
-  display: flex; align-items: center; justify-content: center;
 }
 
 /* --- Misc ------------------------------------------------------------------------------- */

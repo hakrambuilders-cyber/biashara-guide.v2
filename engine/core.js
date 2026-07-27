@@ -115,7 +115,7 @@ export function checkForFAQ(text) {
 // Shared profile helpers
 // ---------------------------------------------------------------------------
 
-const SALES_ANNUAL_ESTIMATE = {
+export const SALES_ANNUAL_ESTIMATE = {
   belowOne: 700000,
   oneToFive: 3000000,
   fiveToTwenty: 12000000,
