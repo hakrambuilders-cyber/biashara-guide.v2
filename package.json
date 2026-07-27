@@ -6,6 +6,6 @@
   "scripts": {
     "start": "npx serve .",
     "demo:text-channel": "node channels/text-adapter.js",
-    "check": "node --check app.js && node --check brand.js && node --check engine/core.js && node --check engine/knowledge.js && node --check engine/memory.js && node --check channels/text-adapter.js"
+    "check": "node --check app.js && node --check brand.js && node --check engine/core.js && node --check engine/knowledge.js && node --check engine/memory.js && node --check engine/telemetry.js && node --check channels/text-adapter.js"
   }
 }

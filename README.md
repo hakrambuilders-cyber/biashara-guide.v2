@@ -26,6 +26,7 @@ No build step is required.
 - **`styles.css` exists now.** (It was referenced by `index.html` but missing from the v2 prototype — the app rendered unstyled. Fixed.)
 - **TRA Officer Console split into its own repo entirely.** It used to live in this repo as `officer.html`/`officer.js`/`officer.css`; it's now a fully separate project ([biashara-guide-officer](https://github.com/hakrambuilders-cyber/biashara-guide-officer)) with its own deployment. `engine/analytics.js` moved with it — this repo no longer contains any officer/analytics code at all.
 - **Contrast fix.** Section labels ("Hatua ya 1 kati ya 5" etc.) were rendering in yellow on white backgrounds — fixed to black.
+- **Real telemetry — this app now feeds the officer console real data.** `engine/telemetry.js` sends one anonymized event (sector, stage, sales bracket, registration status, compliance score, risk level, next action, language — nothing identifying) to a shared Supabase database when someone reaches their Compliance Advisor screen. It's write-only from here: this app has no ability to read anything back, whether its own event or anyone else's. Sending fails silently and never blocks guidance. See the officer console repo's `supabase-setup.sql` for the exact database policies.
 
 ## Implemented journeys
 
@@ -37,7 +38,7 @@ No build step is required.
 - **Understand My Taxes**: an educational tax summary paired with a live illustrative Presumptive Tax + EFD-threshold calculator.
 - **Ask Anything**: a conversational assistant that answers FAQs, runs the real presumptive-tax calculator from free text, and — if it remembers your profile — leads with your actual next step instead of a generic reply.
 
-The **TRA Officer Console** (login simulation → National Analytics Overview: compliance gaps, risk distribution, sector/region breakdowns, notice types, confusing topics — aggregate demo data only) lives entirely in its own repo now: [biashara-guide-officer](https://github.com/hakrambuilders-cyber/biashara-guide-officer).
+The **TRA Officer Console** (login simulation → National Analytics Overview, now backed by real anonymized data from this app via Supabase, with a synthetic fallback when there's none) lives entirely in its own repo now: [biashara-guide-officer](https://github.com/hakrambuilders-cyber/biashara-guide-officer).
 
 ## Design tokens
 
@@ -53,6 +54,7 @@ The **TRA Officer Console** (login simulation → National Analytics Overview: c
 - `engine/core.js` — the channel-agnostic brain: parsing, presumptive-tax calculator, compliance score, risk engine, next-best-action queue, journey, benefits, notice guidance, and the assistant's routing logic
 - `engine/knowledge.js` — static bilingual reference data (sectors, licensing notes, FAQs, notice copy) — the seed for the Tax-Law Registry described in the Functional Spec
 - `engine/memory.js` — localStorage persistence for the Memory Engine
+- `engine/telemetry.js` — sends one anonymized event per session to the shared Supabase database backing the officer console's live data mode
 - `styles.css` — design tokens, reset, and component styles for the citizen app
 - `channels/text-adapter.js` — a USSD/WhatsApp-style numbered-menu channel driven by `engine/core.js`; run with `npm run demo:text-channel`
 

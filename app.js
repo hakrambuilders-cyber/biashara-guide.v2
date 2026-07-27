@@ -28,6 +28,7 @@ import {
 
 import { SECTORS } from './engine/knowledge.js';
 import { loadMemory, saveMemory, clearMemory, describeLastVisit } from './engine/memory.js';
+import { sendGuidanceEvent } from './engine/telemetry.js';
 import { brandMarkSvg } from './brand.js';
 
 // ---------------------------------------------------------------------------
@@ -980,6 +981,10 @@ function render() {
   if (detailInput) detailInput.focus({ preventScroll: true });
 
   saveMemory({ profile: state.profile, lang: state.lang, noticeType: state.noticeType });
+
+  if (['snapshot', 'checkup-result', 'advisor'].includes(route) && state.profile.business) {
+    sendGuidanceEvent(state.profile, getComplianceAdvisor(state.profile), state.lang);
+  }
 }
 
 // ---------------------------------------------------------------------------
