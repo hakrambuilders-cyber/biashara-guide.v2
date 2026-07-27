@@ -1,12 +1,15 @@
 # Biashara Guide — Prototype v3
 
-Mobile-first working prototype for a citizen-first TRA business-guidance service. It is designed to explain rights, opportunities, next steps, and routes to support — not to judge or inspect the citizen.
+Two separate front-ends sharing one channel-agnostic engine:
+
+- **Citizen app** (`index.html` / `app.js`) — mobile-first, no login, designed to explain rights, opportunities, next steps, and routes to support. Not to judge or inspect the citizen.
+- **TRA Officer Console** (`officer.html` / `officer.js`) — desktop-oriented, gated behind a login simulation, showing aggregate national analytics only — never an individual case file.
 
 **Read next:** [docs/PRODUCT_CONSTITUTION.md](./docs/PRODUCT_CONSTITUTION.md) (vision & principles) and [docs/FUNCTIONAL_SPEC.md](./docs/FUNCTIONAL_SPEC.md) (architecture & scale-out plan).
 
 ## Run it
 
-Open `index.html` in a modern browser, or run:
+Open `index.html` (citizen app) or `officer.html` (officer console — any username/password logs in, it's a simulation) in a modern browser, or run:
 
 ```
 npm start
@@ -22,7 +25,7 @@ No build step is required.
 - **Memory Engine, for real.** `engine/memory.js` persists just the profile/language/notice-type to `localStorage` so a returning user sees a "Welcome back" banner with their last visit and next step — and can erase it in one tap ("Forget my saved data").
 - **Deeper compliance logic.** Sector-specific licensing notes, an EFD-machine threshold check (TSh 14M/year), and a weighted risk model replace the single "next step" of v2.
 - **`styles.css` exists now.** (It was referenced by `index.html` but missing from the v2 prototype — the app rendered unstyled. Fixed.)
-- **TRA Officer Analytics View.** A new, clearly separated screen (`#/tra-insights`, linked from a distinct entry point at the bottom of Home) showing what TRA would actually see: national compliance-gap breakdowns, risk distribution, sector/region trends, notice types, and confusing-topic patterns — aggregate only, never an individual case file, powered by `engine/analytics.js`.
+- **TRA Officer Console — a genuinely separate app.** `officer.html`/`officer.js`/`officer.css` are a distinct, desktop-oriented front-end (not a screen inside the citizen SPA), gated behind a login simulation, showing what TRA would actually see: national compliance-gap breakdowns, risk distribution, sector/region trends, notice types, and confusing-topic patterns — aggregate only, never an individual case file, powered by `engine/analytics.js`. Linked from a distinct entry point at the bottom of the citizen Home screen.
 
 ## Implemented journeys
 
@@ -33,24 +36,37 @@ No build step is required.
 - **TRA Notices**: notice-type selection, plain-language explanation, and a suggested action.
 - **Understand My Taxes**: an educational tax summary paired with a live illustrative Presumptive Tax + EFD-threshold calculator.
 - **Ask Anything**: a conversational assistant that answers FAQs, runs the real presumptive-tax calculator from free text, and — if it remembers your profile — leads with your actual next step instead of a generic reply.
-- **TRA Officer Analytics View**: national-level compliance gaps, risk distribution, sector/region breakdowns, notice types received, and the topics causing the most confusion — aggregate demo data only, never an individual case.
+
+### TRA Officer Console (`officer.html` — separate app)
+
+- **Login simulation → National Analytics Overview**: a desktop dashboard with compliance gaps, risk distribution, sector/region breakdowns, notice types received, and the topics causing the most confusion — aggregate demo data only, never an individual case. Log in with any username/password (nothing is checked); log out returns to the login screen.
 
 ## Design tokens
 
 - Primary: `#F9E50F` (yellow) — sampled from TRA's real public site (tra.go.tz) nav/CTA color
 - Secondary: `#0A0A0A` (near-black) — sampled from the same source
-- Logo: an original checkmark-badge mark (`brandMark()` in `app.js`), not a reproduction of TRA's registered logo — see the "Unofficial concept prototype" banner shown on every screen
-- Mobile-first frame: 480px reference width (desktop shows a framed device card)
+- Logo: an original checkmark-badge mark (`brandMarkSvg()` in `brand.js`, shared by both front-ends), not a reproduction of TRA's registered logo — see the "Unofficial concept prototype" banner shown on every screen
+- Citizen app: mobile-first frame, 480px reference width (desktop shows a framed device card)
+- Officer console: desktop-first, no mobile frame — a sidebar + fluid multi-column dashboard grid
 
 ## Code organization
 
-- `index.html` — application shell
-- `styles.css` — design tokens and reusable UI component styles
-- `app.js` — hash router, screen rendering, DOM events, and localStorage wiring for the **web channel only**
+**Shared**
+- `brand.js` — the original logo mark, used by both front-ends so they share one visual identity
 - `engine/core.js` — the channel-agnostic brain: parsing, presumptive-tax calculator, compliance score, risk engine, next-best-action queue, journey, benefits, notice guidance, and the assistant's routing logic
 - `engine/knowledge.js` — static bilingual reference data (sectors, licensing notes, FAQs, notice copy) — the seed for the Tax-Law Registry described in the Functional Spec
+- `engine/analytics.js` — the Analytics Engine (Module 10): aggregation logic for the officer console, run today over a deterministic synthetic population (no backend exists yet to collect real events — see the Functional Spec §3.2) but scored by the *same* `engine/core.js` functions a real citizen gets
+- `styles.css` — design tokens, reset, and component styles shared by both front-ends (cards, chips, buttons, risk colors)
+
+**Citizen app**
+- `index.html`, `app.js` — hash router, screen rendering, DOM events for the **web channel only**
 - `engine/memory.js` — localStorage persistence for the Memory Engine
-- `engine/analytics.js` — the Analytics Engine (Module 10): aggregation logic for the TRA Officer view, run today over a deterministic synthetic population (no backend exists yet to collect real events — see the Functional Spec §3.2) but scored by the *same* `engine/core.js` functions a real citizen gets
+
+**TRA Officer Console** (separate app — see above)
+- `officer.html`, `officer.js` — login simulation + desktop analytics dashboard
+- `officer.css` — desktop shell/grid layout (loaded alongside `styles.css`, not instead of it)
+
+**Other channels**
 - `channels/text-adapter.js` — a USSD/WhatsApp-style numbered-menu channel driven by `engine/core.js`; run with `npm run demo:text-channel`
 
 ## Compliance Advisor scoring (current rules)

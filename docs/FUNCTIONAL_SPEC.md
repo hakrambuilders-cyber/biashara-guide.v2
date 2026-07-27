@@ -59,7 +59,7 @@ This is not aspirational: `channels/text-adapter.js` in this repository is a wor
 | Module 7 — Risk Engine | Educates about exposure without frightening tone | `engine/core.js`: `computeRisk` (weighted factors + informational notes, never a bare "you are at risk") |
 | Module 8 — Progress Engine | Visual journey with a current step | `engine/core.js`: `getJourney`; rendered as the journey ladder in the Advisor Dashboard |
 | Module 9 — Memory Engine | Remembers just enough between visits | `engine/memory.js` (localStorage today; see §3.2 for the server-side evolution) |
-| Module 10 — Analytics Engine | Aggregate insight for TRA, not surveillance | `engine/analytics.js` (`buildTRAInsights`) — real aggregation logic (risk/sector/region/gap/notice/topic breakdowns), currently fed a synthetic population since no event-collection backend exists yet (§3.2); rendered in `app.js` as the TRA Officer Analytics View (`#/tra-insights`), which only ever displays aggregates, never the underlying records |
+| Module 10 — Analytics Engine | Aggregate insight for TRA, not surveillance | `engine/analytics.js` (`buildTRAInsights`) — real aggregation logic (risk/sector/region/gap/notice/topic breakdowns), currently fed a synthetic population since no event-collection backend exists yet (§3.2); rendered in `officer.js`/`officer.html` as the TRA Officer Console — a genuinely separate, desktop-oriented app behind a login gate (§9), not a screen inside the citizen SPA — which only ever displays aggregates, never the underlying records |
 
 ---
 
@@ -165,6 +165,8 @@ Every channel adapter emits the same event shape — `guidance_requested`, `reco
 
 This directly operationalizes the Product Constitution's Governance and Secondary Users commitments: aggregate access by default, case-level access only with a logged reason.
 
+**Prototype note:** `officer.html`/`officer.js` puts a login screen in front of the aggregate dashboard to make this access boundary visible in the demo — it is a UI simulation only (any username/password is accepted, nothing is validated or stored). A real deployment replaces it with actual TRA staff authentication (e.g. SSO against an existing TRA identity system) and the role checks this table describes; the citizen app deliberately has no login at all, since Principle 1 (Simplicity First) and the "no training needed" design goal rule out asking an informal business owner to manage an account.
+
 ---
 
 ## 10. Audit Logging
@@ -255,5 +257,7 @@ Reaffirming Product Constitution §12: this specification deliberately does not 
 | `engine/memory.js` | §3.2 client-side tier, Module 9 |
 | `channels/text-adapter.js` | §2 architecture proof, §7 |
 | `engine/analytics.js` | Module 10, §12 |
-| `app.js` | Module 1 (web adapter), TRA Officer Analytics View (Module 10 UI) |
-| `styles.css` | Presentation layer only — contains no business logic by design |
+| `app.js` | Module 1 (citizen web adapter) |
+| `officer.js` / `officer.html` | Module 10 UI, §9 (login-gated access, prototype simulation) |
+| `brand.js` | Shared visual identity between the two front-ends — not a spec module |
+| `styles.css` / `officer.css` | Presentation layer only — contains no business logic by design |
