@@ -1,15 +1,14 @@
 # Biashara Guide — Prototype v3
 
-Two separate front-ends sharing one channel-agnostic engine:
+This repo is the **citizen app only** — mobile-first, no login, designed to explain rights, opportunities, next steps, and routes to support. Not to judge or inspect the citizen. It has no link anywhere to the TRA Officer Console.
 
-- **Citizen app** (`index.html` / `app.js`) — mobile-first, no login, designed to explain rights, opportunities, next steps, and routes to support. Not to judge or inspect the citizen.
-- **TRA Officer Console** (`officer.html` / `officer.js`) — desktop-oriented, gated behind a login simulation, showing aggregate national analytics only — never an individual case file.
+**The TRA Officer Console is a genuinely separate project**, its own repo and its own deployment, not a page inside this one: **[biashara-guide-officer](https://github.com/hakrambuilders-cyber/biashara-guide-officer)**. Desktop-oriented, gated behind a login simulation, showing aggregate national analytics only — never an individual case file. It's reached only by knowing its URL, the same way a real internal TRA tool wouldn't be advertised on the public-facing product.
 
 **Read next:** [docs/PRODUCT_CONSTITUTION.md](./docs/PRODUCT_CONSTITUTION.md) (vision & principles) and [docs/FUNCTIONAL_SPEC.md](./docs/FUNCTIONAL_SPEC.md) (architecture & scale-out plan).
 
 ## Run it
 
-Open `index.html` (citizen app) or `officer.html` (officer console — any username/password logs in, it's a simulation) in a modern browser, or run:
+Open `index.html` in a modern browser, or run:
 
 ```
 npm start
@@ -25,10 +24,8 @@ No build step is required.
 - **Memory Engine, for real.** `engine/memory.js` persists just the profile/language/notice-type to `localStorage` so a returning user sees a "Welcome back" banner with their last visit and next step — and can erase it in one tap ("Forget my saved data").
 - **Deeper compliance logic.** Sector-specific licensing notes, an EFD-machine threshold check (TSh 14M/year), and a weighted risk model replace the single "next step" of v2.
 - **`styles.css` exists now.** (It was referenced by `index.html` but missing from the v2 prototype — the app rendered unstyled. Fixed.)
-- **TRA Officer Console — a genuinely separate app.** `officer.html`/`officer.js`/`officer.css` are a distinct, desktop-oriented front-end (not a screen inside the citizen SPA), gated behind a login simulation, showing what TRA would actually see: national compliance-gap breakdowns, risk distribution, sector/region trends, notice types, and confusing-topic patterns — aggregate only, never an individual case file, powered by `engine/analytics.js`. The citizen app has **no link to it at all** — it's reached only by knowing the URL, same as a real internal tool wouldn't be advertised on the public-facing product.
-- **Contrast fixes.** Section labels ("Hatua ya 1 kati ya 5" etc.) were rendering in yellow on white backgrounds — fixed to black. The officer console's main content area was inheriting dark text on a black page background on wide screens — fixed with an explicit light background.
-- **More realistic officer stats.** A small share of the mock population now models businesses larger than their self-reported bracket (so "eligible for presumptive tax" isn't a suspicious flat 100%), pluralization is fixed ("1 business" not "1 businesses"), and the dashboard shows a "data snapshot generated" timestamp.
-- **Anonymous statistics refresh.** The 🇹🇿 flag icon in the officer console's sidebar regenerates the aggregate snapshot with a fresh random seed — a deliberately low-key control rather than an obvious "Reset" button, since it only ever re-samples anonymous synthetic data, never any real record.
+- **TRA Officer Console split into its own repo entirely.** It used to live in this repo as `officer.html`/`officer.js`/`officer.css`; it's now a fully separate project ([biashara-guide-officer](https://github.com/hakrambuilders-cyber/biashara-guide-officer)) with its own deployment. `engine/analytics.js` moved with it — this repo no longer contains any officer/analytics code at all.
+- **Contrast fix.** Section labels ("Hatua ya 1 kati ya 5" etc.) were rendering in yellow on white backgrounds — fixed to black.
 
 ## Implemented journeys
 
@@ -40,37 +37,26 @@ No build step is required.
 - **Understand My Taxes**: an educational tax summary paired with a live illustrative Presumptive Tax + EFD-threshold calculator.
 - **Ask Anything**: a conversational assistant that answers FAQs, runs the real presumptive-tax calculator from free text, and — if it remembers your profile — leads with your actual next step instead of a generic reply.
 
-### TRA Officer Console (`officer.html` — separate app)
-
-- **Login simulation → National Analytics Overview**: a desktop dashboard with compliance gaps, risk distribution, sector/region breakdowns, notice types received, and the topics causing the most confusion — aggregate demo data only, never an individual case. Log in with any username/password (nothing is checked); log out returns to the login screen.
+The **TRA Officer Console** (login simulation → National Analytics Overview: compliance gaps, risk distribution, sector/region breakdowns, notice types, confusing topics — aggregate demo data only) lives entirely in its own repo now: [biashara-guide-officer](https://github.com/hakrambuilders-cyber/biashara-guide-officer).
 
 ## Design tokens
 
 - Primary: `#F9E50F` (yellow) — sampled from TRA's real public site (tra.go.tz) nav/CTA color
 - Secondary: `#0A0A0A` (near-black) — sampled from the same source
-- Logo: an original checkmark-badge mark (`brandMarkSvg()` in `brand.js`, shared by both front-ends), not a reproduction of TRA's registered logo — see the "Unofficial concept prototype" banner shown on every screen
-- Citizen app: mobile-first frame, 480px reference width (desktop shows a framed device card)
-- Officer console: desktop-first, no mobile frame — a sidebar + fluid multi-column dashboard grid
+- Logo: an original checkmark-badge mark (`brandMarkSvg()` in `brand.js`), not a reproduction of TRA's registered logo — see the "Unofficial concept prototype" banner shown on every screen. The officer console repo has its own copy of `brand.js` so both projects share one visual identity without sharing a codebase.
+- Mobile-first frame: 480px reference width (desktop shows a framed device card)
 
 ## Code organization
 
-**Shared**
-- `brand.js` — the original logo mark, used by both front-ends so they share one visual identity
+- `index.html`, `app.js` — hash router, screen rendering, DOM events for the **web channel only**
+- `brand.js` — the original logo mark (also copied into the officer console repo)
 - `engine/core.js` — the channel-agnostic brain: parsing, presumptive-tax calculator, compliance score, risk engine, next-best-action queue, journey, benefits, notice guidance, and the assistant's routing logic
 - `engine/knowledge.js` — static bilingual reference data (sectors, licensing notes, FAQs, notice copy) — the seed for the Tax-Law Registry described in the Functional Spec
-- `engine/analytics.js` — the Analytics Engine (Module 10): aggregation logic for the officer console, run today over a deterministic synthetic population (no backend exists yet to collect real events — see the Functional Spec §3.2) but scored by the *same* `engine/core.js` functions a real citizen gets
-- `styles.css` — design tokens, reset, and component styles shared by both front-ends (cards, chips, buttons, risk colors)
-
-**Citizen app**
-- `index.html`, `app.js` — hash router, screen rendering, DOM events for the **web channel only**
 - `engine/memory.js` — localStorage persistence for the Memory Engine
-
-**TRA Officer Console** (separate app — see above)
-- `officer.html`, `officer.js` — login simulation + desktop analytics dashboard
-- `officer.css` — desktop shell/grid layout (loaded alongside `styles.css`, not instead of it)
-
-**Other channels**
+- `styles.css` — design tokens, reset, and component styles for the citizen app
 - `channels/text-adapter.js` — a USSD/WhatsApp-style numbered-menu channel driven by `engine/core.js`; run with `npm run demo:text-channel`
+
+This repo is the source of truth for `engine/core.js`, `engine/knowledge.js`, and `brand.js` — the officer console repo keeps its own hand-synced copies (see its README for why: two static, no-build-step sites with independent deployments).
 
 ## Compliance Advisor scoring (current rules)
 
