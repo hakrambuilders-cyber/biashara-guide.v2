@@ -34,12 +34,24 @@ function post(table, payload) {
   });
 }
 
-let sentThisSession = false;
+// Tracks the last profile actually sent (not just "have we ever sent
+// anything") so re-renders of the *same* profile (navigating between
+// Advisor/Snapshot/Checkup screens) don't spam duplicate events, but a
+// genuinely different client filling out the form on the same shared
+// device/browser — a walk-up kiosk, a family phone — still gets counted.
+// A page reload also resets this naturally (it's just a module variable).
+let lastSentSignature = null;
 
 export function sendGuidanceEvent(profile, advisor, lang) {
-  if (sentThisSession) return; // one signal per session is enough; avoids spamming on every re-render
   if (!profile?.business) return;
-  sentThisSession = true;
+
+  const signature = JSON.stringify([
+    profile.business, profile.stage, profile.sales,
+    [...profile.registrations].sort(), profile.records, profile.filedReturn,
+    advisor.complianceScore, advisor.risk.level
+  ]);
+  if (signature === lastSentSignature) return;
+  lastSentSignature = signature;
 
   post('guidance_events', {
     sector: profile.business === 'OTHER' ? null : profile.business,
