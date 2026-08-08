@@ -358,13 +358,13 @@ export function getTaxGuidance(profile) {
     cards: [
       {
         icon: '◒',
-        title: copy('Kodi ya mapato', 'Income tax'),
+        title: copy('Kodi ya mapato ni nini?', 'What is income tax?'),
         body: copy('Inaweza kuhusiana na mapato yanayotozwa ya biashara. Kumbukumbu sahihi husaidia kuelewa hali yako.', 'It may relate to taxable business income. Accurate records help you understand your position.'),
         action: copy('Jifunze kutofautisha mauzo, gharama na faida.', 'Learn the difference between sales, expenses, and profit.')
       },
       {
         icon: '◇',
-        title: copy('VAT', 'VAT'),
+        title: copy('VAT ni nini?', 'What is VAT?'),
         body: growth
           ? copy('Mauzo yanapokua, ni muhimu kukagua masharti ya usajili wa VAT na wajibu unaoweza kutokea.', 'As sales grow, it is important to check VAT registration conditions and any resulting obligations.')
           : copy('Endelea kufuatilia mauzo yako; mahitaji yanaweza kubadilika kadri biashara inavyokua.', 'Keep tracking sales; requirements can change as the business grows.'),
@@ -372,7 +372,7 @@ export function getTaxGuidance(profile) {
       },
       {
         icon: '▤',
-        title: copy('EFD na kumbukumbu', 'EFD and records'),
+        title: copy('EFD na kumbukumbu ni nini?', 'What are EFD and records?'),
         body: f.efdLikelyRequired
           ? copy('Kiwango chako cha mauzo kinakaribia/kimezidi TSh 14M — huenda mashine ya EFD inahitajika.', 'Your sales level is near/above TSh 14M — an EFD machine may be required.')
           : copy('Kumbukumbu husaidia kujua wajibu unaoweza kukuhusu na kuwasilisha taarifa kwa usahihi.', 'Records help you understand possible obligations and submit information accurately.'),
@@ -468,7 +468,7 @@ export function getBusinessCheckup(profile = {}) {
   return {
     readiness: advisor.complianceScore,
     risk: advisor.risk,
-    completed: completed.length ? completed : [copy('Umeanza kufanya Business Checkup', 'Started the Business Checkup')],
+    completed: completed.length ? completed : [copy('Umeanza Ukaguzi wa Biashara', 'Started the Business Check')],
     improvements,
     nextStep: advisor.actions[0]
   };

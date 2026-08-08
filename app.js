@@ -71,9 +71,9 @@ const BUSINESS_CATEGORIES = [
 ];
 
 const STAGE_OPTIONS = [
-  { key: 'mpya', label: { sw: 'Mpya', en: 'New' }, note: { sw: 'Chini ya mwaka mmoja', en: 'Under one year' } },
-  { key: 'inaendelea', label: { sw: 'Inaendelea', en: 'Operating' }, note: { sw: 'Miaka 1 - 3', en: '1 - 3 years' } },
-  { key: 'imara', label: { sw: 'Imara', en: 'Established' }, note: { sw: 'Zaidi ya miaka 3', en: '3+ years' } }
+  { key: 'mpya', icon: '🌱', label: { sw: 'Mpya', en: 'New' }, note: { sw: 'Chini ya mwaka mmoja', en: 'Under one year' } },
+  { key: 'inaendelea', icon: '🌿', label: { sw: 'Inaendelea', en: 'Operating' }, note: { sw: 'Miaka 1 - 3', en: '1 - 3 years' } },
+  { key: 'imara', icon: '🌳', label: { sw: 'Imara', en: 'Established' }, note: { sw: 'Zaidi ya miaka 3', en: '3+ years' } }
 ];
 
 const SALES_BUCKETS = [
@@ -84,9 +84,9 @@ const SALES_BUCKETS = [
 ];
 
 const REGISTRATION_OPTIONS = [
-  { key: 'tin', label: { sw: 'TIN Number', en: 'TIN Number' }, note: { sw: 'Namba ya utambulisho wa mlipakodi', en: 'Taxpayer identification number' } },
-  { key: 'businessRegistration', label: { sw: 'Usajili wa biashara', en: 'Business registration' }, note: { sw: 'BRELA au mamlaka husika', en: 'BRELA or relevant authority' } },
-  { key: 'licence', label: { sw: 'Leseni ya biashara', en: 'Business licence' }, note: { sw: 'Kama inahitajika kwa sekta yako', en: 'If required for your sector' } }
+  { key: 'tin', icon: '🪪', label: { sw: 'TIN Number', en: 'TIN Number' }, note: { sw: 'Namba ya utambulisho wa mlipakodi', en: 'Taxpayer identification number' } },
+  { key: 'businessRegistration', icon: '📄', label: { sw: 'Usajili wa biashara', en: 'Business registration' }, note: { sw: 'BRELA au mamlaka husika', en: 'BRELA or relevant authority' } },
+  { key: 'licence', icon: '📜', label: { sw: 'Leseni ya biashara', en: 'Business licence' }, note: { sw: 'Kama inahitajika kwa sekta yako', en: 'If required for your sector' } }
 ];
 
 const BENEFIT_STATUS_OPTIONS = [
@@ -198,8 +198,8 @@ function screenSplash() {
     <p class="eyebrow" style="margin-top:18px;">🇹🇿 TRA</p>
     <h1 style="margin-top:8px;">Biashara Guide</h1>
     <p class="lead">${state.lang === 'sw'
-      ? 'Mwongozo rahisi wa haki, fursa na hatua zinazofuata kwa biashara yako.'
-      : 'Simple guidance on rights, opportunities, and next steps for your business.'}</p>
+      ? 'Jibu maswali machache, ujue usajili, kodi na fursa zinazokuhusu — kwa lugha rahisi.'
+      : 'Answer a few questions and find out what registrations, taxes, and opportunities apply to you — in plain language.'}</p>
     <div class="actions" style="margin-top:32px; width:100%;">
       <button class="btn btn-primary" data-nav="welcome">${state.lang === 'sw' ? 'Anza' : 'Get started'}</button>
     </div>
@@ -221,20 +221,19 @@ function screenWelcome() {
       ${langSwitch()}
     </div>
     <div class="actions">
-      <button class="btn btn-primary" data-nav="home">${state.lang === 'sw' ? 'Endelea' : 'Continue'}</button>
+      <button class="btn btn-primary" data-nav="home">${state.lang === 'sw' ? 'Niko Tayari' : "I'm ready"}</button>
     </div>
   `);
 }
 
 function screenHome() {
-  const actions = [
-    { icon: '🚀', route: 'category', title: { sw: 'Anzisha Biashara', en: 'Start a Business' }, desc: { sw: 'Pata hatua zako za mwanzo', en: 'Get your first steps' } },
-    { icon: '🧭', route: 'advisor', title: { sw: 'Kiongozi wa Utii', en: 'Compliance Advisor' }, desc: { sw: 'Alama, hatari na hatua zinazofuata', en: 'Score, risk & next best actions' } },
-    { icon: '🏪', route: 'checkup-stage', title: { sw: 'Nina Biashara Tayari', en: 'I Have a Business' }, desc: { sw: 'Fanya Business Checkup', en: 'Run a Business Checkup' } },
-    { icon: '🎁', route: 'benefits-intro', title: { sw: 'Fursa na Vivutio', en: 'Benefits & Incentives' }, desc: { sw: 'Chunguza fursa zako', en: 'Explore what may apply' } },
+  const secondaryActions = [
+    { icon: '🪜', route: 'journey', title: { sw: 'Hatua za Biashara', en: 'Business Steps' }, desc: { sw: 'Orodha ya hatua za kufuata', en: 'A checklist of steps to follow' } },
+    { icon: '🏪', route: 'checkup-stage', title: { sw: 'Kagua Biashara Yako', en: 'Check Your Business' }, desc: { sw: 'Kwa biashara iliyopo tayari', en: 'For a business already running' } },
+    { icon: '🎁', route: 'benefits-intro', title: { sw: 'Vivutio na Fursa', en: 'Benefits & Incentives' }, desc: { sw: 'Chunguza fursa zako', en: 'Explore what may apply' } },
     { icon: '✉️', route: 'notices-intro', title: { sw: 'Taarifa za TRA', en: 'TRA Notices' }, desc: { sw: 'Elewa taarifa ulizopokea', en: 'Understand a notice you received' } },
-    { icon: '📊', route: 'taxes-intro', title: { sw: 'Elewa Kodi Zangu', en: 'Understand My Taxes' }, desc: { sw: 'Muhtasari wa elimu ya kodi', en: 'An educational tax summary' } },
-    { icon: '💬', route: 'chat', title: { sw: 'Uliza Chochote', en: 'Ask Anything' }, desc: { sw: 'Zungumza na msaidizi', en: 'Talk to the assistant' } }
+    { icon: '📊', route: 'taxes-intro', title: { sw: 'Jifunze Kuhusu Kodi', en: 'Learn About Tax' }, desc: { sw: 'Muhtasari rahisi wa kodi', en: 'A plain-language tax summary' } },
+    { icon: '💬', route: 'chat', title: { sw: 'Uliza Biashara Guide', en: 'Ask Biashara Guide' }, desc: { sw: 'Muulize swali lolote', en: 'Ask us anything' } }
   ];
 
   const showResume = state.returning && state.profile.business;
@@ -255,9 +254,20 @@ function screenHome() {
         <h2>${state.lang === 'sw' ? 'Nianze wapi?' : 'Where should I start?'}</h2>
       </div>
       ${resumeBanner}
+
+      <button class="hero-cta" data-nav="category">
+        <div class="hero-cta-icon">🎯</div>
+        <h3>${state.lang === 'sw' ? 'Jua biashara yako inahitaji nini' : 'Find out what your business needs'}</h3>
+        <p>${state.lang === 'sw'
+          ? 'Tujibu maswali 5 rahisi kuhusu biashara yako, tukupe mwongozo wa usajili, kodi na fursa zinazokuhusu — bila wewe kujua sheria za kodi.'
+          : "Answer 5 simple questions about your business and we'll show you the registration, tax, and opportunity guidance that applies — no tax knowledge needed."}</p>
+        <span class="hero-cta-btn">${state.lang === 'sw' ? 'Anza — Dakika 2 tu' : 'Start — just 2 minutes'} →</span>
+      </button>
+
+      <p class="section-label">${state.lang === 'sw' ? 'Vitu vingine unavyoweza kufanya' : 'Other things you can do'}</p>
       <div class="home-grid">
-        ${actions.map(a => `
-          <button class="action-card" data-nav="${a.route}">
+        ${secondaryActions.map(a => `
+          <button class="action-card secondary" data-nav="${a.route}">
             <div class="action-icon">${a.icon}</div>
             <div>
               <strong>${t(a.title)}</strong>
@@ -275,7 +285,16 @@ function screenHome() {
             : "We only provide guidance — we don't take action on your behalf or inspect your business."}</p>
         </div>
       </div>
-      <button class="link-btn" data-forget="1">${state.lang === 'sw' ? 'Futa taarifa zangu zilizohifadhiwa' : 'Forget my saved data'}</button>
+      <div class="privacy-card">
+        <span>🔒</span>
+        <div>
+          <strong>${state.lang === 'sw' ? 'Faragha yako' : 'Your privacy'}</strong>
+          <p>${state.lang === 'sw'
+            ? 'Tunahifadhi taarifa hii kwenye kifaa chako tu, ili kukukumbuka safari yako wakati mwingine. Haitumiki kukukagua, na unaweza kuifuta wakati wowote.'
+            : "We store this only on your device, so we can remember your progress next time. It's never used to inspect you, and you can delete it anytime."}</p>
+          <button class="link-btn" data-forget="1">${state.lang === 'sw' ? 'Futa taarifa zangu' : 'Delete my data'}</button>
+        </div>
+      </div>
     </div>
   `);
 }
@@ -286,7 +305,7 @@ function screenCategory() {
   return screen('', `
     ${topbar('category')}
     <div class="content">
-      <p class="eyebrow">${state.lang === 'sw' ? 'Hatua ya 1 kati ya 5' : 'Step 1 of 5'}</p>
+      <p class="eyebrow">${state.lang === 'sw' ? 'Swali 1 kati ya 5' : 'Question 1 of 5'}</p>
       ${miniProgress(1, 5)}
       <h2>${state.lang === 'sw' ? 'Biashara yako ni ya aina gani?' : 'What kind of business is it?'}</h2>
       <div class="business-grid">
@@ -312,7 +331,7 @@ function screenDetails() {
   return screen('', `
     ${topbar('details')}
     <div class="content">
-      <p class="eyebrow">${state.lang === 'sw' ? 'Hatua ya 2 kati ya 5' : 'Step 2 of 5'}</p>
+      <p class="eyebrow">${state.lang === 'sw' ? 'Swali 2 kati ya 5' : 'Question 2 of 5'}</p>
       ${miniProgress(2, 5)}
       <h2>${state.lang === 'sw' ? 'Tuambie kidogo zaidi' : 'Tell us a bit more'}</h2>
       <p class="question-note">${state.lang === 'sw'
@@ -332,14 +351,14 @@ function screenStage() {
   return screen('', `
     ${topbar('stage')}
     <div class="content">
-      <p class="eyebrow">${state.lang === 'sw' ? 'Hatua ya 3 kati ya 5' : 'Step 3 of 5'}</p>
+      <p class="eyebrow">${state.lang === 'sw' ? 'Swali 3 kati ya 5' : 'Question 3 of 5'}</p>
       ${miniProgress(3, 5)}
       <h2>${state.lang === 'sw' ? 'Biashara yako iko hatua gani?' : 'What stage is your business at?'}</h2>
       <div class="stack">
         ${STAGE_OPTIONS.map(o => `
           <button class="option ${state.profile.stage === o.key ? 'selected' : ''}" data-select-stage="${o.key}">
             <span class="radio"></span>
-            <span class="option-copy">${t(o.label)}<small>${t(o.note)}</small></span>
+            <span class="option-copy">${o.icon} ${t(o.label)}<small>${t(o.note)}</small></span>
           </button>
         `).join('')}
       </div>
@@ -354,7 +373,7 @@ function screenSales(nextRoute) {
   return screen('', `
     ${topbar('sales')}
     <div class="content">
-      <p class="eyebrow">${state.lang === 'sw' ? 'Hatua ya 4 kati ya 5' : 'Step 4 of 5'}</p>
+      <p class="eyebrow">${state.lang === 'sw' ? 'Swali 4 kati ya 5' : 'Question 4 of 5'}</p>
       ${miniProgress(4, 5)}
       <h2>${state.lang === 'sw' ? 'Mauzo yako ni kiasi gani?' : 'What are your approximate sales?'}</h2>
       <p class="question-note">${state.lang === 'sw' ? 'Chagua kiwango kinachokaribiana zaidi.' : 'Choose the closest range.'}</p>
@@ -377,7 +396,7 @@ function screenRegistration(nextRoute) {
   return screen('', `
     ${topbar('registration')}
     <div class="content">
-      <p class="eyebrow">${state.lang === 'sw' ? 'Hatua ya 5 kati ya 5' : 'Step 5 of 5'}</p>
+      <p class="eyebrow">${state.lang === 'sw' ? 'Swali 5 kati ya 5' : 'Question 5 of 5'}</p>
       ${miniProgress(5, 5)}
       <h2>${state.lang === 'sw' ? 'Una vipi kati ya hivi?' : 'Which of these do you already have?'}</h2>
       <p class="question-note">${state.lang === 'sw' ? 'Chagua zote zinazokuhusu.' : 'Select all that apply.'}</p>
@@ -385,7 +404,7 @@ function screenRegistration(nextRoute) {
         ${REGISTRATION_OPTIONS.map(o => `
           <button class="option ${state.profile.registrations.includes(o.key) ? 'selected' : ''}" data-toggle-reg="${o.key}">
             <span class="checkbox">${state.profile.registrations.includes(o.key) ? '✓' : ''}</span>
-            <span class="option-copy">${t(o.label)}<small>${t(o.note)}</small></span>
+            <span class="option-copy">${o.icon} ${t(o.label)}<small>${t(o.note)}</small></span>
           </button>
         `).join('')}
       </div>
@@ -419,41 +438,105 @@ function screenAnalysis(nextRoute) {
 }
 
 function screenSnapshot() {
-  const rec = getRecommendation(state.profile);
+  const advisor = getComplianceAdvisor(state.profile);
+  const nextStep = advisor.actions[0];
+  const otherNeeds = advisor.actions.slice(1, 4);
+  const businessName = esc((state.profile.detail || (state.profile.businessLabel || '').split(' (')[0]));
+
+  const startTier = advisor.complianceScore >= 70
+    ? { sw: 'Umeanza vizuri', en: "You're off to a great start" }
+    : advisor.complianceScore >= 40
+      ? { sw: 'Uko njiani', en: "You're on your way" }
+      : { sw: 'Umeanza safari yako', en: "You've started your journey" };
+
   return screen('', `
     ${topbar('snapshot')}
     <div class="content">
-      <h2>${state.lang === 'sw' ? 'Muhtasari wa Biashara Yako' : 'Your Business Snapshot'}</h2>
-      <div class="card readiness-card" style="margin-top:20px;">
-        <div>
-          <span class="snapshot-label">${state.lang === 'sw' ? 'Utayari' : 'Readiness'}</span>
-          <div class="readiness-number">${rec.readiness}%</div>
+      <p class="eyebrow">${state.lang === 'sw' ? 'Kwa biashara yako…' : 'For your business…'}</p>
+      <h2 style="margin-top:6px;">${businessName}</h2>
+
+      <div class="card result-block" style="margin-top:6px;">
+        <p class="section-label">${state.lang === 'sw' ? 'BIASHARA YAKO' : 'YOUR BUSINESS'}</p>
+        <div class="status-row">
+          <span class="status-mark done">✓</span>
+          <div><strong>${t(startTier)}</strong><span>${state.lang === 'sw' ? `Utayari: ${advisor.complianceScore}%` : `Readiness: ${advisor.complianceScore}%`}</span></div>
         </div>
-        <span class="chip">✓ ${esc((state.profile.businessLabel || '').split(' (')[0])}</span>
-        <div class="readiness-track" style="margin-top:6px;"><i style="width:${rec.readiness}%;"></i></div>
+        <div class="readiness-track" style="margin-top:8px;"><i style="width:${advisor.complianceScore}%;"></i></div>
       </div>
-      <div class="card next-step" style="margin-top:14px;">
-        <span class="snapshot-label">${state.lang === 'sw' ? 'Hatua inayofuata' : 'Next step'}</span>
-        <div class="snapshot-value">${t(rec.nextStep.title)}</div>
-        <p class="step-time">${t(rec.nextStep.time)}</p>
-        <div class="divider"></div>
-        <p style="color:#354453; font-size:14px; line-height:1.5;">${t(rec.nextStep.reason)}</p>
+
+      ${otherNeeds.length ? `
+      <div class="card result-block">
+        <p class="section-label">${state.lang === 'sw' ? 'UNACHOWEZA KUHITAJI' : 'WHAT YOU MAY NEED'}</p>
+        <p class="question-note" style="margin-top:0;">${state.lang === 'sw'
+          ? 'Kwa taarifa ulizotupa, huenda ukahitaji:'
+          : 'Based on the information you gave us, you may need:'}</p>
+        ${otherNeeds.map(a => `
+          <div class="status-row">
+            <span class="status-mark check">!</span>
+            <div><strong>${t(a.title)}</strong><span>${t(a.reason)}</span></div>
+          </div>
+        `).join('')}
+      </div>` : ''}
+
+      <div class="next-action-card">
+        <p class="section-label">${state.lang === 'sw' ? '→ HATUA INAYOFUATA' : '→ NEXT STEP'}</p>
+        <strong>${t(nextStep.title)}</strong>
+        <p>${t(nextStep.reason)}</p>
+        <p class="step-time" style="margin-top:6px;">${t(nextStep.time)}</p>
       </div>
+
       <div class="card" style="margin-top:14px;">
         <span class="snapshot-label">${state.lang === 'sw' ? 'Fursa za kuchunguza' : 'Opportunities to explore'}</span>
-        ${rec.opportunities.map(o => `<div class="benefit"><b>+</b> ${t(o)}</div>`).join('')}
+        ${advisor.benefits.items.filter(i => i.status !== 'not-yet').slice(0, 3).map(i => `<div class="benefit"><b>+</b> ${t(i.title)}</div>`).join('')}
       </div>
       ${legalNote()}
     </div>
     <div class="actions">
-      <button class="btn btn-primary" data-nav="advisor">${state.lang === 'sw' ? 'Ona Kiongozi wa Utii Kamili' : 'See Full Compliance Advisor'}</button>
+      <button class="btn btn-primary" data-nav="advisor">${state.lang === 'sw' ? 'Ona Mwongozo Kamili' : 'See Full Guidance'}</button>
       <button class="btn btn-secondary" data-nav="journey">${state.lang === 'sw' ? 'Ona Safari Yangu' : 'See My Journey'}</button>
       <button class="btn btn-secondary" data-nav="home">${state.lang === 'sw' ? 'Rudi Nyumbani' : 'Back Home'}</button>
     </div>
   `);
 }
 
+const GENERIC_STEPS = [
+  { title: { sw: 'Sajili biashara yako', en: 'Register your business' }, desc: { sw: 'BRELA au mamlaka husika, kutegemea aina ya biashara.', en: 'BRELA or the relevant authority, depending on business type.' } },
+  { title: { sw: 'Pata TIN', en: 'Get a TIN' }, desc: { sw: 'Bure, takriban dakika 15, unahitaji NIDA.', en: 'Free, around 15 minutes, you need a NIDA ID.' } },
+  { title: { sw: 'Angalia leseni inayohitajika', en: 'Check the required licence' }, desc: { sw: 'Baadhi ya biashara zinahitaji leseni maalumu.', en: 'Some businesses need a sector-specific licence.' } },
+  { title: { sw: 'Anza kutunza kumbukumbu', en: 'Start keeping records' }, desc: { sw: 'Andika mauzo na matumizi yako kila siku.', en: 'Track your sales and expenses each day.' } }
+];
+
 function screenJourney() {
+  if (!state.profile.business) {
+    return screen('', `
+      ${topbar('journey')}
+      <div class="content">
+        <h2>${state.lang === 'sw' ? 'Hatua za Jumla za Biashara' : 'General Business Steps'}</h2>
+        <p class="lead">${state.lang === 'sw'
+          ? 'Hizi ni hatua za jumla ambazo biashara nyingi hupitia. Tujibu maswali 5 kuhusu biashara yako ili tukuoneshe hatua zinazokuhusu wewe hasa.'
+          : "These are general steps most businesses go through. Answer 5 quick questions about your business so we can show you the steps that apply to you specifically."}</p>
+        <div class="card" style="margin-top:16px;">
+          <div class="step-list">
+            ${GENERIC_STEPS.map((s, i) => `
+              <div class="step-item">
+                <span class="step-num">${i + 1}</span>
+                <div>
+                  <strong>${state.lang === 'sw' ? `Hatua ya ${i + 1} — ${t(s.title)}` : `Step ${i + 1} — ${t(s.title)}`}</strong>
+                  <span>${t(s.desc)}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        ${legalNote()}
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" data-nav="category">${state.lang === 'sw' ? 'Pata Mwongozo wa Biashara Yangu' : 'Get My Business Guidance'}</button>
+        <button class="btn btn-secondary" data-nav="home">${state.lang === 'sw' ? 'Rudi Nyumbani' : 'Back Home'}</button>
+      </div>
+    `);
+  }
+
   const rec = getRecommendation(state.profile);
   return screen('', `
     ${topbar('journey')}
@@ -484,14 +567,14 @@ function screenCheckupStage() {
   return screen('', `
     ${topbar('checkup-stage')}
     <div class="content">
-      <p class="eyebrow">${state.lang === 'sw' ? 'Business Checkup — Hatua ya 1 kati ya 4' : 'Business Checkup — Step 1 of 4'}</p>
+      <p class="eyebrow">${state.lang === 'sw' ? 'Ukaguzi wa Biashara — Swali 1 kati ya 4' : 'Business Check — Question 1 of 4'}</p>
       ${miniProgress(1, 4)}
       <h2>${state.lang === 'sw' ? 'Biashara yako ina muda gani?' : 'How long has your business been running?'}</h2>
       <div class="stack">
         ${STAGE_OPTIONS.map(o => `
           <button class="option ${state.profile.stage === o.key ? 'selected' : ''}" data-select-stage="${o.key}">
             <span class="radio"></span>
-            <span class="option-copy">${t(o.label)}<small>${t(o.note)}</small></span>
+            <span class="option-copy">${o.icon} ${t(o.label)}<small>${t(o.note)}</small></span>
           </button>
         `).join('')}
       </div>
@@ -506,14 +589,14 @@ function screenCheckupRegistration() {
   return screen('', `
     ${topbar('checkup-registration')}
     <div class="content">
-      <p class="eyebrow">${state.lang === 'sw' ? 'Business Checkup — Hatua ya 2 kati ya 4' : 'Business Checkup — Step 2 of 4'}</p>
+      <p class="eyebrow">${state.lang === 'sw' ? 'Ukaguzi wa Biashara — Swali 2 kati ya 4' : 'Business Check — Question 2 of 4'}</p>
       ${miniProgress(2, 4)}
       <h2>${state.lang === 'sw' ? 'Una vipi kati ya hivi?' : 'Which of these do you already have?'}</h2>
       <div class="stack">
         ${REGISTRATION_OPTIONS.map(o => `
           <button class="option ${state.profile.registrations.includes(o.key) ? 'selected' : ''}" data-toggle-reg="${o.key}">
             <span class="checkbox">${state.profile.registrations.includes(o.key) ? '✓' : ''}</span>
-            <span class="option-copy">${t(o.label)}<small>${t(o.note)}</small></span>
+            <span class="option-copy">${o.icon} ${t(o.label)}<small>${t(o.note)}</small></span>
           </button>
         `).join('')}
       </div>
@@ -528,7 +611,7 @@ function yesNoScreen(route, step, question, saveKey, nextRoute) {
   return screen('', `
     ${topbar(route)}
     <div class="content">
-      <p class="eyebrow">${state.lang === 'sw' ? `Business Checkup — Hatua ya ${step} kati ya 4` : `Business Checkup — Step ${step} of 4`}</p>
+      <p class="eyebrow">${state.lang === 'sw' ? `Ukaguzi wa Biashara — Swali ${step} kati ya 4` : `Business Check — Question ${step} of 4`}</p>
       ${miniProgress(step, 4)}
       <h2>${t(question)}</h2>
       <div class="stack">
@@ -551,7 +634,8 @@ function screenCheckupResult() {
   return screen('', `
     ${topbar('checkup-result')}
     <div class="content">
-      <h2>${state.lang === 'sw' ? 'Matokeo ya Business Checkup' : 'Your Business Checkup Results'}</h2>
+      <p class="eyebrow">${state.lang === 'sw' ? 'Kwa biashara yako…' : 'For your business…'}</p>
+      <h2 style="margin-top:6px;">${state.lang === 'sw' ? 'Matokeo ya Ukaguzi wa Biashara' : 'Your Business Check Results'}</h2>
       <div class="card readiness-card" style="margin-top:20px;">
         <div>
           <span class="snapshot-label">${state.lang === 'sw' ? 'Utayari' : 'Readiness'}</span>
@@ -577,7 +661,7 @@ function screenCheckupResult() {
       ${legalNote()}
     </div>
     <div class="actions">
-      <button class="btn btn-primary" data-nav="advisor">${state.lang === 'sw' ? 'Ona Kiongozi wa Utii Kamili' : 'See Full Compliance Advisor'}</button>
+      <button class="btn btn-primary" data-nav="advisor">${state.lang === 'sw' ? 'Ona Mwongozo Kamili' : 'See Full Guidance'}</button>
       <button class="btn btn-secondary" data-nav="home">${state.lang === 'sw' ? 'Rudi Nyumbani' : 'Back Home'}</button>
     </div>
   `);
@@ -593,11 +677,11 @@ function screenAdvisor() {
         <div class="intro-icon">🧭</div>
         <h2>${state.lang === 'sw' ? 'Bado hatuna taarifa za biashara yako' : "We don't have your business details yet"}</h2>
         <p class="lead">${state.lang === 'sw'
-          ? "Anza kwa 'Anzisha Biashara' au 'Nina Biashara Tayari' ili tupate mwongozo unaokufaa."
-          : "Start with 'Start a Business' or 'I Have a Business' so we can tailor guidance for you."}</p>
+          ? 'Tutahitaji kujua mambo machache kuhusu biashara yako ili tukupe mwongozo unaokufaa.'
+          : "We'll need to know a few things about your business so we can give you guidance that fits."}</p>
       </div>
       <div class="actions">
-        <button class="btn btn-primary" data-nav="category">${state.lang === 'sw' ? 'Anzisha Biashara' : 'Start a Business'}</button>
+        <button class="btn btn-primary" data-nav="category">${state.lang === 'sw' ? 'Jibu Maswali 5' : 'Answer 5 Questions'}</button>
         <button class="btn btn-secondary" data-nav="checkup-stage">${state.lang === 'sw' ? 'Nina Biashara Tayari' : 'I Have a Business'}</button>
       </div>
     `);
@@ -608,10 +692,10 @@ function screenAdvisor() {
   return screen('', `
     ${topbar('advisor')}
     <div class="content">
-      <h2>${state.lang === 'sw' ? 'Kiongozi wa Utii wa Kikodi' : 'Compliance Advisor'}</h2>
+      <h2>${state.lang === 'sw' ? 'Mwongozo Kamili wa Biashara Yako' : "Your Business's Complete Guide"}</h2>
       <div class="card readiness-card" style="margin-top:16px;">
         <div>
-          <span class="snapshot-label">${state.lang === 'sw' ? 'Alama ya Utii' : 'Compliance Score'}</span>
+          <span class="snapshot-label">${state.lang === 'sw' ? 'Alama ya Utayari' : 'Readiness Score'}</span>
           <div class="readiness-number">${advisor.complianceScore}%</div>
         </div>
         <span class="chip risk-chip risk-${advisor.risk.level}">${t(RISK_LABEL[advisor.risk.level])}</span>
@@ -868,7 +952,7 @@ function screenChat() {
     </div>
     <form class="chat-form" id="chatForm">
       <input type="text" id="chatInput" placeholder="${state.lang === 'sw' ? 'Andika hapa...' : 'Type here...'}" autocomplete="off" />
-      <button type="submit" class="send-btn" aria-label="Send">➤</button>
+      <button type="submit" class="send-btn" id="chatSendBtn" aria-label="Send" disabled>➤</button>
     </form>
   `);
 }
@@ -1078,6 +1162,16 @@ function attachEvents() {
 
     const navBtn = e.target.closest('[data-nav]');
     if (navBtn) { nav(navBtn.getAttribute('data-nav')); return; }
+  });
+
+  document.addEventListener('input', (e) => {
+    if (e.target && e.target.id === 'detailInput') {
+      state.profile.detail = e.target.value;
+    }
+    if (e.target && e.target.id === 'chatInput') {
+      const sendBtn = document.getElementById('chatSendBtn');
+      if (sendBtn) sendBtn.disabled = !e.target.value.trim();
+    }
   });
 
   document.addEventListener('submit', (e) => {

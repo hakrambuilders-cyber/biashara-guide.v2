@@ -92,6 +92,17 @@ h1, h2, h3, p { margin: 0; }
 }
 .screen.splash .lead { color: rgba(255,255,255,0.8); margin-top: 12px; max-width: 320px; }
 .screen.splash .eyebrow { color: var(--primary); }
+.screen.splash .actions {
+  position: static;
+  background: none;
+  padding: 0;
+  box-shadow: none;
+}
+.screen.splash .btn-caption {
+  color: rgba(255,255,255,0.55);
+  font-size: 12px;
+  margin-top: 10px;
+}
 
 .brand-mark {
   width: 76px;
@@ -284,6 +295,57 @@ h2 { font-size: 21px; font-weight: 750; margin: 6px 0 14px; line-height: 1.3; }
   border-radius: 12px;
 }
 
+.action-card.secondary { min-height: 118px; }
+
+/* --- Home hero CTA (primary, highest visual priority) --------------------- */
+
+.hero-cta {
+  background: var(--secondary);
+  border-radius: var(--radius-lg);
+  padding: 22px 20px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow-pop);
+  border: none;
+  text-align: left;
+  width: 100%;
+}
+.hero-cta .hero-cta-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: var(--primary);
+  color: var(--secondary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.hero-cta h3 { font-size: 19px; font-weight: 800; line-height: 1.3; color: #fff; }
+.hero-cta p { font-size: 13.5px; color: rgba(255,255,255,0.75); line-height: 1.5; }
+.hero-cta .hero-cta-btn {
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--primary);
+  color: var(--secondary);
+  font-weight: 800;
+  font-size: 14.5px;
+  padding: 13px 18px;
+  border-radius: var(--radius-sm);
+  width: fit-content;
+}
+
+.section-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 4px 0 10px;
+}
+
 .support-promise {
   display: flex;
   gap: 12px;
@@ -293,6 +355,21 @@ h2 { font-size: 21px; font-weight: 750; margin: 6px 0 14px; line-height: 1.3; }
 }
 .support-promise strong { font-size: 13px; }
 .support-promise p { font-size: 12.5px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+
+/* --- Privacy card (Home) ---------------------------------------------------- */
+
+.privacy-card {
+  display: flex;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-top: 10px;
+}
+.privacy-card strong { font-size: 13px; }
+.privacy-card p { font-size: 12.5px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+.privacy-card .link-btn { padding: 10px 0 0; align-self: flex-start; font-size: 12.5px; }
 
 /* --- Progress dots ------------------------------------------------------------ */
 
@@ -314,6 +391,7 @@ h2 { font-size: 21px; font-weight: 750; margin: 6px 0 14px; line-height: 1.3; }
   background: var(--surface);
   border-radius: var(--radius-sm);
   padding: 14px 16px;
+  min-height: 52px;
   text-align: left;
   font-size: 14.5px;
   color: var(--ink);
@@ -322,6 +400,16 @@ h2 { font-size: 21px; font-weight: 750; margin: 6px 0 14px; line-height: 1.3; }
 .option.selected { border-color: var(--primary); background: var(--primary-tint); }
 .option-copy { display: flex; flex-direction: column; gap: 2px; }
 .option-copy small { color: var(--muted); font-size: 12px; font-weight: 400; }
+
+.option-icon {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.option.selected .option-icon { background: var(--primary-tint); }
 
 .radio, .checkbox {
   width: 20px; height: 20px;
@@ -345,12 +433,14 @@ h2 { font-size: 21px; font-weight: 750; margin: 6px 0 14px; line-height: 1.3; }
   background: var(--surface);
   border-radius: var(--radius-md);
   padding: 18px 12px;
+  min-height: 84px;
   text-align: center;
   font-size: 13px;
   font-weight: 600;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 8px;
 }
 .business-card .emoji { font-size: 26px; }
@@ -459,6 +549,66 @@ h2 { font-size: 21px; font-weight: 750; margin: 6px 0 14px; line-height: 1.3; }
 }
 .benefit-status.status-check { background: var(--warning-bg); color: var(--warning); }
 .benefit-status.status-not-yet { background: var(--bg); color: var(--muted); }
+
+/* --- Status rows (✓ done / ! needs attention / → next action) ------------------- */
+
+.status-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 9px 0;
+}
+.status-mark {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.status-mark.done { background: var(--success-bg); color: var(--success); }
+.status-mark.check { background: var(--warning-bg); color: var(--warning); }
+.status-mark.next { background: var(--primary); color: var(--secondary); }
+.status-row strong { display: block; font-size: 14px; }
+.status-row span { color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+
+.result-block { margin-top: 14px; }
+.result-block .section-label { margin-bottom: 6px; }
+
+.next-action-card {
+  background: var(--primary-tint);
+  border: 1.5px solid var(--primary);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-top: 14px;
+}
+.next-action-card .section-label { color: var(--primary-dark); }
+.next-action-card strong { display: block; font-size: 16px; margin-top: 2px; }
+.next-action-card p { color: #4A3E00; font-size: 13.5px; margin-top: 6px; line-height: 1.5; }
+
+/* --- Generic actionable step list (non-personalized empty states) --------------- */
+
+.step-list { display: flex; flex-direction: column; }
+.step-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.step-item:last-child { border-bottom: none; }
+.step-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--secondary);
+  font-size: 12px;
+  font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.step-item strong { display: block; font-size: 14px; }
+.step-item span { color: var(--muted); font-size: 12.5px; line-height: 1.4; }
 
 /* --- Next-best-action queue (Compliance Advisor) -------------------------------- */
 
@@ -616,7 +766,9 @@ h2 { font-size: 21px; font-weight: 750; margin: 6px 0 14px; line-height: 1.3; }
   color: var(--secondary);
   font-size: 16px;
   flex-shrink: 0;
+  transition: opacity 0.15s ease;
 }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* --- Misc ------------------------------------------------------------------------------- */
 
