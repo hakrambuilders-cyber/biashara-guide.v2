@@ -88,13 +88,21 @@ export function parseSectorKey(text) {
   return null;
 }
 
-export function parseSector(text) {
-  const key = parseSectorKey(text);
-  return key ? SECTORS[key].name : 'Biashara Ndogondogo / Rejareja (General Retail)';
+function localizedSectorName(key, lang = 'sw') {
+  const name = SECTORS[key]?.name;
+  if (!name) return lang === 'sw' ? 'Biashara ndogo / rejareja' : 'Small business / general retail';
+  const bilingual = name.match(/^(.*?)\s*\((.*?)\)$/);
+  if (!bilingual) return name;
+  return lang === 'sw' ? bilingual[1].trim() : bilingual[2].trim();
 }
 
-export function sectorName(key) {
-  return SECTORS[key]?.name ?? null;
+export function parseSector(text, lang = 'sw') {
+  const key = parseSectorKey(text);
+  return localizedSectorName(key, lang);
+}
+
+export function sectorName(key, lang = 'sw') {
+  return key ? localizedSectorName(key, lang) : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -126,23 +134,27 @@ export function calculateTRAPresumptiveTax(dailyTurnover, profile = {}) {
 
   if (eligibility.status === 'transport' || eligibility.status === 'ineligible' || eligibility.status === 'needs-info') {
     annualTax = null;
-    bracketInfo = eligibility.reason?.sw ?? 'Kamilisha muundo wa biashara, ukaazi, chanzo cha mapato na hali ya kumbukumbu kabla ya kuona mfano wa kodi.';
+    bracketInfo = eligibility.reason ?? copy('Kamilisha muundo wa biashara, ukaazi, chanzo cha mapato na hali ya kumbukumbu kabla ya kuona mfano wa kodi.', 'Complete the business form, residence, income-source and record-status checks before viewing a tax illustration.');
   } else if (annualTurnover <= bands[0].upTo) {
     annualTax = 0;
-    bracketInfo = 'Chini ya TSh 4 Million (Inasamehewa Kodi)';
+    bracketInfo = copy('Chini ya TSh 4 Milioni (haitozwi kodi)', 'Below TSh 4 Million (no tax due)');
     isExempt = true;
   } else if (annualTurnover <= bands[1].upTo) {
     annualTax = profile.records === 'yes' ? Math.round((annualTurnover - 4_000_000) * 0.03) : bands[1].incompleteRecordsTax;
-    bracketInfo = profile.records === 'yes' ? 'TSh 4M - 7M (3% ya mauzo yanayozidi TSh 4M kwa kumbukumbu kamili)' : 'TSh 4M - 7M (TSh 100,000 kwa kumbukumbu zisizokamilika)';
+    bracketInfo = profile.records === 'yes'
+      ? copy('TSh 4M - 7M (3% ya mauzo yanayozidi TSh 4M kwa kumbukumbu kamili)', 'TSh 4M - 7M (3% of turnover above TSh 4M with complete records)')
+      : copy('TSh 4M - 7M (TSh 100,000 kwa kumbukumbu zisizokamilika)', 'TSh 4M - 7M (TSh 100,000 with incomplete records)');
   } else if (annualTurnover <= bands[2].upTo) {
     annualTax = profile.records === 'yes' ? Math.round(90_000 + (annualTurnover - 7_000_000) * 0.03) : bands[2].incompleteRecordsTax;
-    bracketInfo = profile.records === 'yes' ? 'TSh 7M - 11M (TSh 90,000 + 3% ya mauzo yanayozidi TSh 7M)' : 'TSh 7M - 11M (TSh 250,000 kwa kumbukumbu zisizokamilika)';
+    bracketInfo = profile.records === 'yes'
+      ? copy('TSh 7M - 11M (TSh 90,000 + 3% ya mauzo yanayozidi TSh 7M)', 'TSh 7M - 11M (TSh 90,000 + 3% of turnover above TSh 7M)')
+      : copy('TSh 7M - 11M (TSh 250,000 kwa kumbukumbu zisizokamilika)', 'TSh 7M - 11M (TSh 250,000 with incomplete records)');
   } else if (annualTurnover <= rules.presumptiveTax.annualTurnoverCap) {
     annualTax = Math.round(annualTurnover * bands[3].incompleteRecordsRate);
-    bracketInfo = 'TSh 11M - 200M (4% ya mauzo yote ya mwaka kwa kumbukumbu zisizokamilika)';
+    bracketInfo = copy('TSh 11M - 200M (4% ya mauzo yote ya mwaka kwa kumbukumbu zisizokamilika)', 'TSh 11M - 200M (4% of annual turnover with incomplete records)');
   } else {
     annualTax = null;
-    bracketInfo = 'Zaidi ya TSh 200M: Biashara haiko kwenye kundi la Presumptive Tax.';
+    bracketInfo = copy('Zaidi ya TSh 200M: biashara haiko kwenye kundi la kodi ya makadirio.', 'Above TSh 200M: the business is outside the presumptive-tax regime.');
     isOverLimit = true;
   }
 

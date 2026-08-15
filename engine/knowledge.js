@@ -16,7 +16,7 @@ export const copy = (sw, en) => ({ sw, en });
 export const SECTORS = {
   CHAKULA: {
     name: 'Chakula na Lishe (Food & Catering)',
-    keywords: ['mama lishe', 'chakula', 'mgahawa', 'mkahawa', 'chippy', 'mshikaki', 'migahawa', 'usindikaji'],
+    keywords: ['mama lishe', 'chakula', 'mgahawa', 'mkahawa', 'chippy', 'mshikaki', 'migahawa', 'usindikaji', 'food', 'restaurant', 'eatery', 'catering', 'bakery', 'snacks', 'drinks', 'juice'],
     licenceNote: copy(
       'Biashara za chakula mara nyingi huhitaji cheti cha afya/usafi pamoja na leseni ya biashara.',
       'Food businesses typically need a health/hygiene certificate in addition to a business licence.'
@@ -25,7 +25,7 @@ export const SECTORS = {
   },
   USAFIRI: {
     name: 'Usafiri na Uchukuzi (Transportation)',
-    keywords: ['boda', 'bodaboda', 'bajaji', 'daladala', 'usafiri', 'taxi', 'tax', 'lori', 'pikipiki'],
+    keywords: ['boda', 'bodaboda', 'bajaji', 'daladala', 'usafiri', 'taxi', 'tax', 'lori', 'pikipiki', 'transport', 'motorcycle', 'bus', 'delivery', 'courier'],
     licenceNote: copy(
       'Huduma za usafiri kwa kawaida huhitaji leseni ya safari/ruhusa ya mamlaka ya usafirishaji.',
       'Transport services typically require a route permit or transport-authority licence.'
@@ -34,7 +34,7 @@ export const SECTORS = {
   },
   UREMBO: {
     name: 'Urembo na Saluni (Beauty & Personal Care)',
-    keywords: ['kinyozi', 'saluni', 'nywele', 'kusuka', 'urembo', 'barber', 'spa'],
+    keywords: ['kinyozi', 'saluni', 'nywele', 'kusuka', 'urembo', 'barber', 'spa', 'beauty', 'salon', 'hair', 'barbershop', 'braiding', 'nails', 'makeup'],
     licenceNote: copy(
       'Saluni na vinyozi kwa kawaida huhitaji leseni ya biashara ya kawaida na usajili wa eneo.',
       'Salons and barbershops typically need a standard business licence and premises registration.'
@@ -43,7 +43,7 @@ export const SECTORS = {
   },
   UFUNDI: {
     name: 'Ufundi na Uzalishaji (Crafts & Manufacturing)',
-    keywords: ['mbao', 'samani', 'ufundi', 'ujenzi', 'chuma', 'welding', 'fremu', 'shughuli za ujenzi', 'bomba'],
+    keywords: ['mbao', 'samani', 'ufundi', 'ujenzi', 'chuma', 'welding', 'fremu', 'shughuli za ujenzi', 'bomba', 'carpentry', 'furniture', 'construction', 'masonry', 'electrical', 'plumbing', 'repair'],
     licenceNote: copy(
       'Shughuli za uzalishaji zinaweza kuhitaji kibali cha eneo la kazi na tahadhari za usalama kazini.',
       'Manufacturing/workshop activity may need a workplace permit and workplace-safety considerations.'
@@ -52,7 +52,7 @@ export const SECTORS = {
   },
   REJAREJA: {
     name: 'Uuzaji wa Bidhaa (Retail & General Trade)',
-    keywords: ['duka', 'rejareja', 'machinga', 'nguo', 'madawa', 'kioski', 'genge', 'duka la nguo', 'mali kauli'],
+    keywords: ['duka', 'rejareja', 'machinga', 'nguo', 'madawa', 'kioski', 'genge', 'duka la nguo', 'mali kauli', 'shop', 'retail', 'groceries', 'clothing', 'clothes', 'hardware', 'phones', 'cosmetics', 'market stall', 'online selling'],
     licenceNote: copy(
       'Maduka na biashara za rejareja kwa kawaida huhitaji leseni ya biashara ya kawaida.',
       'Retail shops typically need a standard business licence.'
@@ -61,7 +61,7 @@ export const SECTORS = {
   },
   KILIMO: {
     name: 'Kilimo, Mifugo na Uvuvi (Agriculture, Livestock & Fishing)',
-    keywords: ['kilimo', 'mkulima', 'mazao', 'mboga', 'matunda', 'kuku', 'mayai', 'mifugo', 'samaki', 'uvuvi'],
+    keywords: ['kilimo', 'mkulima', 'mazao', 'mboga', 'matunda', 'kuku', 'mayai', 'mifugo', 'samaki', 'uvuvi', 'farming', 'agriculture', 'crops', 'vegetables', 'fruit', 'poultry', 'eggs', 'livestock', 'fishing', 'fish'],
     licenceNote: copy(
       'Vibali vinavyohitajika hutegemea shughuli yenyewe na eneo; Biashara Guide itakuonyesha cha kuangalia bila kukisia kibali kimoja kwa biashara zote.',
       'Required permits depend on the activity and location; Biashara Guide flags what to check without assuming one permit fits every business.'
@@ -70,7 +70,7 @@ export const SECTORS = {
   },
   UZALISHAJI: {
     name: 'Uzalishaji Mdogo (Small-scale Production)',
-    keywords: ['ushonaji', 'sabuni', 'kusaga', 'uzalishaji', 'kutengeneza', 'bidhaa za mikono'],
+    keywords: ['ushonaji', 'sabuni', 'kusaga', 'uzalishaji', 'kutengeneza', 'bidhaa za mikono', 'production', 'manufacturing', 'tailoring', 'soap', 'milling', 'handicrafts', 'leather', 'metal goods'],
     licenceNote: copy(
       'Uzalishaji unaweza kuhitaji leseni ya biashara pamoja na masharti yanayotegemea bidhaa, eneo la kazi au usalama.',
       'Production may require a business licence plus requirements that depend on the product, workplace or safety.'
@@ -79,7 +79,7 @@ export const SECTORS = {
   },
   WAKALA: {
     name: 'Wakala wa Fedha (Money Agency Services)',
-    keywords: ['wakala', 'm-pesa', 'mpesa', 'airtel money', 'mixx', 'halopesa', 't-pesa', 'benki'],
+    keywords: ['wakala', 'm-pesa', 'mpesa', 'airtel money', 'mixx', 'halopesa', 't-pesa', 'benki', 'agent', 'mobile money', 'bank agent'],
     licenceNote: copy(
       'Kwa biashara ya uwakala, masharti yanaweza kutegemea huduma unazowakilisha pamoja na leseni ya biashara ya eneo husika.',
       'For agency businesses, requirements can depend on the services represented as well as the relevant local business licence.'
@@ -88,7 +88,7 @@ export const SECTORS = {
   },
   HUDUMA: {
     name: 'Huduma Nyingine (Other Services)',
-    keywords: ['kompyuta', 'kidijitali', 'tuition', 'mafunzo', 'picha', 'video', 'matukio', 'malazi', 'utalii', 'uhasibu', 'ushauri', 'usafi', 'kufua'],
+    keywords: ['kompyuta', 'kidijitali', 'tuition', 'mafunzo', 'picha', 'video', 'matukio', 'malazi', 'utalii', 'uhasibu', 'ushauri', 'usafi', 'kufua', 'services', 'technology', 'computer', 'digital', 'training', 'education', 'photo', 'event', 'accommodation', 'tourism', 'bookkeeping', 'consulting', 'professional', 'cleaning', 'laundry'],
     licenceNote: copy(
       'Masharti ya leseni au kibali hutegemea aina ya huduma na eneo ambako biashara inafanyika.',
       'Licence or permit requirements depend on the type of service and where the business operates.'

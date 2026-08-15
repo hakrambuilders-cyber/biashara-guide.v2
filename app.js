@@ -28,7 +28,6 @@ import {
   getBusinessCheckup
 } from './engine/core.js';
 
-import { SECTORS } from './engine/knowledge.js';
 import { loadMemory, saveMemory, clearMemory, describeLastVisit } from './engine/memory.js';
 import { sendGuidanceEvent, sendChatEvent } from './engine/telemetry.js';
 import { brandMarkSvg } from './brand.js';
@@ -350,7 +349,7 @@ function officialHandoff(actionKey) {
   const service = OFFICIAL_SERVICES[actionKey];
   if (!service) return '';
   const place = state.profile.locationArea === 'OTHER' ? state.profile.locationOther : state.profile.locationArea;
-  const context = [state.profile.businessSubtypeLabel, place, state.profile.locationRegion].filter(Boolean).map(esc).join(' · ');
+  const context = [businessSubtypeName(state.profile), place, state.profile.locationRegion].filter(Boolean).map(esc).join(' · ');
 
   return `
     <div class="card official-handoff">
@@ -410,6 +409,23 @@ function newBusinessRecord(profile = emptyProfile(), chat = { messages: [] }) {
   };
 }
 
+function businessCategoryName(profile = state.profile) {
+  if (profile.business === 'OTHER') return state.lang === 'sw' ? 'Nyingine' : 'Other';
+  const category = BUSINESS_CATEGORIES.find((item) => item.key === profile.business);
+  return category ? t(category.label) : '';
+}
+
+function businessSubtypeName(profile = state.profile) {
+  if (!profile.businessSubtype || profile.businessSubtype === 'OTHER') return '';
+  const subtype = (BUSINESS_SUBTYPES[profile.business] || []).find(([key]) => key === profile.businessSubtype);
+  return subtype ? (state.lang === 'sw' ? subtype[1] : subtype[2]) : '';
+}
+
+function noticeTypeName(type = state.noticeType) {
+  const notice = NOTICE_TYPES.find((item) => item.key === type);
+  return notice ? t(notice.label) : (state.lang === 'sw' ? 'Sina uhakika' : "I'm not sure");
+}
+
 function activeBusiness() {
   return state.businesses.find((b) => b.id === state.activeBusinessId) || null;
 }
@@ -417,8 +433,10 @@ function activeBusiness() {
 function businessName(record, index = 0) {
   const profile = record?.profile || emptyProfile();
   if (profile.detail?.trim()) return profile.detail.trim();
-  if (profile.businessSubtypeLabel) return profile.businessSubtypeLabel;
-  if (profile.businessLabel) return profile.businessLabel.split(' (')[0];
+  const subtype = businessSubtypeName(profile);
+  if (subtype) return subtype;
+  const category = businessCategoryName(profile);
+  if (category) return category;
   return state.lang === 'sw' ? `Biashara ${index + 1}` : `Business ${index + 1}`;
 }
 
@@ -493,7 +511,7 @@ function topbar(route) {
       ${showBack ? `<button class="icon-btn" data-back="1" aria-label="${state.lang === 'sw' ? 'Rudi nyuma' : 'Back'}">←</button>` : brandMark('small')}
       ${context}
       <div class="topbar-actions">
-        <button class="language-toggle" data-lang="${state.lang === 'sw' ? 'en' : 'sw'}" aria-label="${state.lang === 'sw' ? 'Change language to English' : 'Badili lugha kuwa Kiswahili'}">
+        <button class="language-toggle" data-lang="${state.lang === 'sw' ? 'en' : 'sw'}" aria-label="${state.lang === 'sw' ? 'Badili lugha kuwa Kiingereza' : 'Change language to Kiswahili'}">
           <span aria-hidden="true">🌐</span> ${state.lang === 'sw' ? 'English' : 'Kiswahili'}
         </button>
         <button class="help" data-nav="chat">${state.lang === 'sw' ? 'Msaada' : 'Help'}</button>
@@ -594,7 +612,7 @@ function screenHome() {
   const resumeBanner = showResume ? `
     <div class="card resume-card" data-nav="advisor">
       <span class="snapshot-label">${state.lang === 'sw' ? 'Karibu tena' : 'Welcome back'}</span>
-      <strong>${esc((state.profile.businessLabel || '').split(' (')[0])}</strong>
+      <strong>${esc(businessName(activeBusiness(), Math.max(0, state.businesses.findIndex(b => b.id === state.activeBusinessId))))}</strong>
       <p>${state.lang === 'sw'
         ? `Ulitembelea: ${describeLastVisit(state.lastVisitAt, state.lang)}. Gusa kuona hatua yako inayofuata.`
         : `Last visit: ${describeLastVisit(state.lastVisitAt, state.lang)}. Tap to see your next step.`}</p>
@@ -911,13 +929,13 @@ function screenSnapshot() {
       <p class="eyebrow">${state.lang === 'sw' ? 'KWA TAARIFA ULIZOTUPA' : 'BASED ON WHAT YOU TOLD US'}</p>
       <h2>${state.lang === 'sw' ? `Mwongozo wa ${esc(businessName(record, recordIndex))}` : `Guidance for ${esc(businessName(record, recordIndex))}`}</h2>
       <p class="lead">${state.lang === 'sw' ? 'Haya ni mapendekezo ya biashara hii pekee; biashara nyingine inaweza kupata hatua tofauti.' : 'These recommendations are for this business only; another business may receive different next steps.'}</p>
-      ${state.profile.locationArea ? `<p class="profile-context">📍 ${esc(state.profile.locationArea === 'OTHER' ? state.profile.locationOther : state.profile.locationArea)}, ${esc(state.profile.locationRegion)}${state.profile.businessSubtypeLabel ? ` · ${esc(state.profile.businessSubtypeLabel)}` : ''}</p>` : ''}
+      ${state.profile.locationArea ? `<p class="profile-context">📍 ${esc(state.profile.locationArea === 'OTHER' ? state.profile.locationOther : state.profile.locationArea)}, ${esc(state.profile.locationRegion)}${businessSubtypeName(state.profile) ? ` · ${esc(businessSubtypeName(state.profile))}` : ''}</p>` : ''}
       <div class="card readiness-card" style="margin-top:20px;">
         <div>
           <span class="snapshot-label">${state.lang === 'sw' ? 'Muhtasari wa maandalizi' : 'Preparation snapshot'}</span>
           <div class="readiness-number">${rec.readiness}%</div>
         </div>
-        <span class="chip">✓ ${esc((state.profile.businessLabel || '').split(' (')[0])}</span>
+        <span class="chip">✓ ${esc(businessCategoryName(state.profile))}</span>
         <div class="readiness-track" style="margin-top:6px;"><i style="width:${rec.readiness}%;"></i></div>
       </div>
       <div class="card next-step" style="margin-top:14px;">
@@ -1253,7 +1271,7 @@ function screenNoticesResult() {
     ${topbar('notices-result')}
     <div class="content">
       <span class="status-pill warning">${t(g.status)}</span>
-      <h2 style="margin-top:14px;">${esc(state.noticeType || (state.lang === 'sw' ? 'Sina uhakika' : "I'm not sure"))}</h2>
+      <h2 style="margin-top:14px;">${esc(noticeTypeName())}</h2>
       <div class="card" style="margin-top:18px;">
         <span class="snapshot-label">${state.lang === 'sw' ? 'Maana yake' : 'What it may mean'}</span>
         <p style="margin-top:8px; line-height:1.5;">${t(g.meaning)}</p>
@@ -1333,7 +1351,7 @@ function screenTaxes() {
         <div class="snapshot-value">${state.lang === 'sw' ? 'Mauzo/Siku' : 'Sales/Day'}: TSh ${fmtTsh(estimate.dailyTurnover)}</div>
         <div class="snapshot-value">${state.lang === 'sw' ? 'Mauzo/Mwaka' : 'Sales/Year'}: TSh ${fmtTsh(estimate.annualTurnover)}</div>
         <div class="snapshot-value" style="color:#a84600;">${state.lang === 'sw' ? 'Makadirio ya Kodi/Mwaka' : 'Estimated Tax/Year'}: ${estimate.annualTax !== null ? `TSh ${fmtTsh(estimate.annualTax)}` : '—'}</div>
-        <p class="tax-action">${estimate.bracketInfo}</p>
+        <p class="tax-action">${t(estimate.bracketInfo)}</p>
         <p class="question-note">${state.lang === 'sw'
           ? `Kadirio hili limetumia jibu lako kuhusu kumbukumbu. ${estimate.eligibility.status === 'needs-info' ? 'Bado kuna masharti ya ustahiki ambayo hayajathibitishwa.' : ''} Viwango vilihakikiwa kwenye ukurasa wa sasa wa TRA tarehe 12 Agosti 2026.`
           : `This estimate uses your records answer. ${estimate.eligibility.status === 'needs-info' ? 'Some eligibility conditions are still unverified.' : ''} Rates were checked against TRA’s current page on 12 August 2026.`}</p>
@@ -1351,9 +1369,9 @@ function screenTaxes() {
 // --- Ask Anything (Chat) ------------------------------------------------------
 
 const QUICK_PROMPTS = [
-  { sw: 'Mama lishe mauzo 30000 kwa siku', en: 'Mama lishe mauzo 30000 kwa siku' },
-  { sw: 'Duka la nguo mauzo laki 2 kwa siku', en: 'Duka la nguo mauzo laki 2 kwa siku' },
-  { sw: 'Nataka kupata TIN', en: 'Nataka kupata TIN' }
+  { sw: 'Mama lishe mauzo 30000 kwa siku', en: 'Food stall sales TSh 30,000 per day' },
+  { sw: 'Duka la nguo mauzo laki 2 kwa siku', en: 'Clothing shop sales TSh 200,000 per day' },
+  { sw: 'Nataka kupata TIN', en: 'I want to get a TIN' }
 ];
 
 function screenChat() {
@@ -1420,7 +1438,7 @@ function handleChatSubmit(text, confirmedAmount = null) {
       render(); return;
     }
     state.chat.pendingSales = null;
-    const sector = parseSector(text);
+    const sector = parseSector(text, state.lang);
     const tax = calculateTRAPresumptiveTax(dailySales, state.profile);
     const ctrlText = tax.isExempt
       ? (state.lang === 'sw' ? 'ℹ️ Mauzo yako ya mwaka ni chini ya TSh 4 Milioni (Hautakiwi kulipa kodi).' : "ℹ️ Your annual sales are below TSh 4 Million (No tax due).")
@@ -1432,8 +1450,8 @@ function handleChatSubmit(text, confirmedAmount = null) {
       ? '\nℹ️ Mfano huu unatumia viwango vya kumbukumbu zisizokamilika; hali ya kumbukumbu na masharti mengine yanahitaji uthibitisho.'
       : '\nℹ️ This illustration uses incomplete-record rates; record status and other conditions still need verification.';
     const reply = (state.lang === 'sw'
-      ? `✅ **Mchanganuo wa Kodi (${sector})**\n• Mauzo/Siku: TSh ${fmtTsh(dailySales)}\n• Mauzo/Mwaka: TSh ${fmtTsh(tax.annualTurnover)}\n• **Makadirio ya Kodi (Mwaka):** TSh ${tax.annualTax !== null ? fmtTsh(tax.annualTax) : '0'}\n${tax.bracketInfo}\n${ctrlText}${efdText}${basisText}`
-      : `✅ **Tax breakdown (${sector})**\n• Sales/Day: TSh ${fmtTsh(dailySales)}\n• Sales/Year: TSh ${fmtTsh(tax.annualTurnover)}\n• **Estimated Tax (Year):** TSh ${tax.annualTax !== null ? fmtTsh(tax.annualTax) : '0'}\n${tax.bracketInfo}\n${ctrlText}${efdText}${basisText}`);
+      ? `✅ **Mchanganuo wa Kodi (${sector})**\n• Mauzo/Siku: TSh ${fmtTsh(dailySales)}\n• Mauzo/Mwaka: TSh ${fmtTsh(tax.annualTurnover)}\n• **Makadirio ya Kodi (Mwaka):** TSh ${tax.annualTax !== null ? fmtTsh(tax.annualTax) : '0'}\n${t(tax.bracketInfo)}\n${ctrlText}${efdText}${basisText}`
+      : `✅ **Tax breakdown (${sector})**\n• Sales/Day: TSh ${fmtTsh(dailySales)}\n• Sales/Year: TSh ${fmtTsh(tax.annualTurnover)}\n• **Estimated Tax (Year):** TSh ${tax.annualTax !== null ? fmtTsh(tax.annualTax) : '0'}\n${t(tax.bracketInfo)}\n${ctrlText}${efdText}${basisText}`);
     state.chat.messages.push({ sender: 'bot', text: reply, link: { route: 'taxes-intro', label: state.lang === 'sw' ? 'Ona muhtasari kamili wa kodi' : 'See the full tax summary' } });
     render();
     return;
@@ -1527,7 +1545,17 @@ function attachEvents() {
     if (backBtn) { history.back(); return; }
 
     const langBtn = e.target.closest('[data-lang]');
-    if (langBtn) { state.lang = langBtn.getAttribute('data-lang'); render(); return; }
+    if (langBtn) {
+      state.lang = langBtn.getAttribute('data-lang');
+      // Assistant replies are generated in the language active when they are
+      // created. Clear this transient conversation on a language change so a
+      // newly selected language never displays stale assistant copy.
+      state.chat = { messages: [] };
+      const record = activeBusiness();
+      if (record) record.chat = state.chat;
+      render();
+      return;
+    }
 
     const switchBusinessBtn = e.target.closest('[data-switch-business]');
     if (switchBusinessBtn) {
@@ -1562,9 +1590,9 @@ function attachEvents() {
     if (categoryBtn) {
       const key = categoryBtn.getAttribute('data-select-category');
       state.profile.business = key;
-      state.profile.businessLabel = key === 'OTHER'
-        ? (state.lang === 'sw' ? 'Nyingine' : 'Other')
-        : SECTORS[key].name;
+      // Persist stable keys only. Visible names are resolved from the current
+      // language every time the screen renders.
+      state.profile.businessLabel = '';
       state.profile.businessSubtype = null;
       state.profile.businessSubtypeLabel = '';
       state.profile.detail = '';
@@ -1576,9 +1604,7 @@ function attachEvents() {
     if (subtypeBtn) {
       const key = subtypeBtn.getAttribute('data-select-subtype');
       state.profile.businessSubtype = key;
-      state.profile.businessSubtypeLabel = key === 'OTHER'
-        ? ''
-        : (state.lang === 'sw' ? subtypeBtn.getAttribute('data-subtype-sw') : subtypeBtn.getAttribute('data-subtype-en'));
+      state.profile.businessSubtypeLabel = '';
       if (key !== 'OTHER') state.profile.detail = '';
       render();
       return;
