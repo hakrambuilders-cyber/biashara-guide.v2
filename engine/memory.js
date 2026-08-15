@@ -6,14 +6,16 @@
  * load()/save()/clear() interface.
  */
 
-const STORAGE_KEY = 'biashara-guide:v1';
+const STORAGE_KEY = 'biashara-guide:v2';
+const LEGACY_STORAGE_KEY = 'biashara-guide:v1';
 
 export function loadMemory() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
     if (!raw) return null;
     const data = JSON.parse(raw);
     if (!data || typeof data !== 'object') return null;
+    if (data.expiresAt && Date.now() > data.expiresAt) { clearMemory(); return null; }
     return data;
   } catch {
     return null;
@@ -22,7 +24,8 @@ export function loadMemory() {
 
 export function saveMemory(snapshot) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...snapshot, savedAt: Date.now() }));
+    const safeBusinesses = (snapshot.businesses || []).map((business) => ({ ...business, chat: { messages: [] } }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...snapshot, businesses: safeBusinesses, savedAt: Date.now(), expiresAt: Date.now() + 30 * 86400000 }));
   } catch {
     // Storage unavailable (private mode, quota) — guidance still works, just not remembered.
   }
@@ -31,6 +34,7 @@ export function saveMemory(snapshot) {
 export function clearMemory() {
   try {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
   } catch {
     // no-op
   }

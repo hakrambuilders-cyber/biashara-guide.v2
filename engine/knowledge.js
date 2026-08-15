@@ -51,11 +51,47 @@ export const SECTORS = {
     efdSensitive: true
   },
   REJAREJA: {
-    name: 'Biashara Ndogondogo / Rejareja (Retail & General Trade)',
+    name: 'Uuzaji wa Bidhaa (Retail & General Trade)',
     keywords: ['duka', 'rejareja', 'machinga', 'nguo', 'madawa', 'kioski', 'genge', 'duka la nguo', 'mali kauli'],
     licenceNote: copy(
       'Maduka na biashara za rejareja kwa kawaida huhitaji leseni ya biashara ya kawaida.',
       'Retail shops typically need a standard business licence.'
+    ),
+    efdSensitive: true
+  },
+  KILIMO: {
+    name: 'Kilimo, Mifugo na Uvuvi (Agriculture, Livestock & Fishing)',
+    keywords: ['kilimo', 'mkulima', 'mazao', 'mboga', 'matunda', 'kuku', 'mayai', 'mifugo', 'samaki', 'uvuvi'],
+    licenceNote: copy(
+      'Vibali vinavyohitajika hutegemea shughuli yenyewe na eneo; Biashara Guide itakuonyesha cha kuangalia bila kukisia kibali kimoja kwa biashara zote.',
+      'Required permits depend on the activity and location; Biashara Guide flags what to check without assuming one permit fits every business.'
+    ),
+    efdSensitive: true
+  },
+  UZALISHAJI: {
+    name: 'Uzalishaji Mdogo (Small-scale Production)',
+    keywords: ['ushonaji', 'sabuni', 'kusaga', 'uzalishaji', 'kutengeneza', 'bidhaa za mikono'],
+    licenceNote: copy(
+      'Uzalishaji unaweza kuhitaji leseni ya biashara pamoja na masharti yanayotegemea bidhaa, eneo la kazi au usalama.',
+      'Production may require a business licence plus requirements that depend on the product, workplace or safety.'
+    ),
+    efdSensitive: true
+  },
+  WAKALA: {
+    name: 'Wakala wa Fedha (Money Agency Services)',
+    keywords: ['wakala', 'm-pesa', 'mpesa', 'airtel money', 'mixx', 'halopesa', 't-pesa', 'benki'],
+    licenceNote: copy(
+      'Kwa biashara ya uwakala, masharti yanaweza kutegemea huduma unazowakilisha pamoja na leseni ya biashara ya eneo husika.',
+      'For agency businesses, requirements can depend on the services represented as well as the relevant local business licence.'
+    ),
+    efdSensitive: true
+  },
+  HUDUMA: {
+    name: 'Huduma Nyingine (Other Services)',
+    keywords: ['kompyuta', 'kidijitali', 'tuition', 'mafunzo', 'picha', 'video', 'matukio', 'malazi', 'utalii', 'uhasibu', 'ushauri', 'usafi', 'kufua'],
+    licenceNote: copy(
+      'Masharti ya leseni au kibali hutegemea aina ya huduma na eneo ambako biashara inafanyika.',
+      'Licence or permit requirements depend on the type of service and where the business operates.'
     ),
     efdSensitive: true
   }
@@ -72,22 +108,22 @@ export const FAQS = [
   {
     keywords: ['presumptive', 'kodi ya makadirio', 'makadirio ni nini', 'inafanya kazi vipi'],
     response: copy(
-      '**Kodi ya Makadirio (Presumptive Tax)** ni mfumo rahisi wa kodi uliowekwa na TRA kwa ajili ya wafanyabiashara wadogo wenye mauzo yasiyozidi TSh Milioni 100 kwa mwaka.',
-      '**Presumptive Tax** is a simplified tax regime set by TRA for small businesses with annual sales up to TSh 100 Million.'
+      '**Kodi ya Makadirio (Presumptive Tax)** ni mfumo wa kodi kwa wafanyabiashara binafsi wanaotimiza masharti, ikiwa mauzo ya mwaka hayazidi TSh Milioni 200. Kiasi hutegemea mauzo na ukamilifu wa kumbukumbu.',
+      '**Presumptive Tax** is a regime for eligible individual traders with annual turnover not exceeding TSh 200 Million. The amount depends on turnover and record completeness.'
     )
   },
   {
     keywords: ['tin', 'usajili', 'kupata tin', 'namba ya tin'],
     response: copy(
-      'Kupata **TIN Number** ni bure kabisa! Unatakiwa kuwa na Kitambulisho cha NIDA, namba ya simu iliyosajiliwa, na eneo la biashara.',
+      'Kupata **namba ya TIN** ni bure. Kwa kawaida utahitaji Kitambulisho cha NIDA, namba ya simu iliyosajiliwa, na taarifa za eneo la biashara.',
       'Getting a **TIN Number** is completely free! You need a NIDA ID, a registered phone number, and your business location.'
     )
   },
   {
     keywords: ['efd', 'mashine ya efd', 'efd machine'],
     response: copy(
-      'Mashine ya **EFD** inatakiwa kisheria kwa mfanyabiashara yeyote mwenye mauzo yanayofikia au kuzidi **TSh Milioni 14 kwa mwaka**.',
-      'An **EFD** machine is legally required once a business reaches or exceeds **TSh 14 Million in annual sales**.'
+      'Kwa taarifa ya sasa ya TRA, mfanyabiashara anayefikisha mauzo ya **TSh Milioni 11 kwa mwaka au zaidi** ana wajibu wa kupata na kutumia **EFD/VFD**; baadhi ya maeneo au sekta pia zinaweza kuhusishwa.',
+      'Under current TRA guidance, a trader reaching **TSh 11 Million or more in annual turnover** must acquire and use an **EFD/VFD**; some locations or sectors may also be included.'
     )
   }
 ];
@@ -110,8 +146,8 @@ export const NOTICES = {
   },
   'Kikumbusho cha return': {
     status: copy('Hatua inahitajika', 'Action required'),
-    meaning: copy('Kikumbusho kinaweza kuhusiana na taarifa au return inayotakiwa kuwasilishwa.', 'The reminder may relate to information or a return that needs to be submitted.'),
-    action: copy('Thibitisha kama return tayari ilitumwa; kama haikutumwa, fuata njia rasmi ya kuwasilisha.', 'Confirm whether the return was already submitted; if not, use the official filing route.')
+    meaning: copy('Kikumbusho kinaweza kuhusiana na ritani ya kodi inayotakiwa kuwasilishwa.', 'The reminder may relate to information or a return that needs to be submitted.'),
+    action: copy('Thibitisha kama ritani ya kodi tayari iliwasilishwa; kama haikuwasilishwa, fuata njia rasmi ya kuiwasilisha.', 'Confirm whether the return was already submitted; if not, use the official filing route.')
   },
   'Kikumbusho cha malipo': {
     status: copy('Hatua inahitajika', 'Action required'),

@@ -12,6 +12,7 @@
  */
 
 import { copy, SECTORS, NUMBER_UNITS, FAQS, NOTICES } from './knowledge.js';
+import { currentRules } from './regulatory.js';
 
 // ---------------------------------------------------------------------------
 // Free-text parsing (sector + Swahili/English sales figures)
@@ -19,7 +20,18 @@ import { copy, SECTORS, NUMBER_UNITS, FAQS, NOTICES } from './knowledge.js';
 
 export function parseSwahiliNumber(text) {
   if (!text) return null;
-  const cleanText = text.toLowerCase().replace(/,/g, '');
+  const cleanText = text.toLowerCase().replace(/,/g, '').replace(/\b(tsh|tzs|shilingi)\b/g, ' ').trim();
+  const wordNumbers = { sifuri: 0, moja: 1, mbili: 2, tatu: 3, nne: 4, tano: 5, sita: 6, saba: 7, nane: 8, tisa: 9, kumi: 10, ishirini: 20, thelathini: 30, arobaini: 40, hamsini: 50, sitini: 60, sabini: 70, themanini: 80, tisini: 90 };
+  const prefixUnit = /\b(milioni|million|mln|laki|lakh|lkh|elfu|efu|elph|mia|hundred)\s+(sifuri|moja|mbili|tatu|nne|tano|sita|saba|nane|tisa|kumi|ishirini|thelathini|arobaini|hamsini|sitini|sabini|themanini|tisini|\d+(?:\.\d+)?)/g;
+  let prefixTotal = 0;
+  let prefixMatches = 0;
+  for (const match of cleanText.matchAll(prefixUnit)) {
+    const amount = Number.isFinite(Number(match[2])) ? Number(match[2]) : wordNumbers[match[2]];
+    const scale = /^(milioni|million|mln)$/.test(match[1]) ? 1_000_000 : /^(laki|lakh|lkh)$/.test(match[1]) ? 100_000 : /^(elfu|efu|elph)$/.test(match[1]) ? 1_000 : 100;
+    prefixTotal += amount * scale;
+    prefixMatches += 1;
+  }
+  if (prefixMatches) return Math.round(prefixTotal);
 
   const mMatch = cleanText.match(/(\d+(?:\.\d+)?)\s*(?:m|mln|million|milioni)\b/);
   if (mMatch) return Math.round(parseFloat(mMatch[1]) * 1000000);
@@ -30,22 +42,41 @@ export function parseSwahiliNumber(text) {
   const kMatch = cleanText.match(/(\d+(?:\.\d+)?)\s*(?:k|elfu|efu|elph)\b/) || cleanText.match(/(?:elfu|efu|elph)\s*(\d+(?:\.\d+)?)/);
   if (kMatch) return Math.round(parseFloat(kMatch[1] || kMatch[2]) * 1000);
 
-  let multiplier = 1;
-  if (/\b(milioni|million|mln)\b/.test(cleanText)) multiplier = 1000000;
-  else if (/\b(laki|lakh|lkh)\b/.test(cleanText)) multiplier = 100000;
-  else if (/\b(elfu|efu|elph|k)\b/.test(cleanText)) multiplier = 1000;
+  const tokens = cleanText.split(/\s+/).filter(Boolean);
+  let total = 0;
+  let current = 0;
+  let foundUnit = false;
+  for (const token of tokens) {
+    if (token === 'na') continue;
+    if (wordNumbers[token] !== undefined) { current += wordNumbers[token]; continue; }
+    const digit = Number(token);
+    if (Number.isFinite(digit)) { current += digit; continue; }
+    const scale = /^(milioni|million|mln|m)$/.test(token) ? 1_000_000
+      : /^(laki|lakh|lkh)$/.test(token) ? 100_000
+      : /^(elfu|efu|elph|k)$/.test(token) ? 1_000
+      : /^(mia|hundred)$/.test(token) ? 100 : null;
+    if (scale) {
+      foundUnit = true;
+      total += Math.max(1, current) * scale;
+      current = 0;
+    }
+  }
+  if (foundUnit) return Math.round(total + current);
 
   const numDigits = cleanText.match(/\b\d+\b/g);
   if (numDigits && numDigits.length > 0) {
-    const val = parseInt(numDigits[0], 10);
-    return multiplier > 1 ? val * multiplier : val;
+    return parseInt(numDigits[0], 10);
   }
 
   let wordVal = 0;
-  for (const word of cleanText.split(/\s+/)) {
-    if (NUMBER_UNITS[word]) wordVal += NUMBER_UNITS[word];
-  }
-  return wordVal > 0 ? wordVal * multiplier : null;
+  for (const word of cleanText.split(/\s+/)) if (NUMBER_UNITS[word]) wordVal += NUMBER_UNITS[word];
+  return wordVal > 0 ? wordVal : null;
+}
+
+export function extractSalesAmount(text) {
+  const clean = (text ?? '').toLowerCase();
+  if (!/(mauzo|mapato|sales|turnover|kwa\s+siku|\/\s*siku|per\s+day)/.test(clean)) return null;
+  return parseSwahiliNumber(clean);
 }
 
 export function parseSectorKey(text) {
@@ -70,36 +101,55 @@ export function sectorName(key) {
 // Presumptive tax calculator
 // ---------------------------------------------------------------------------
 
-export function calculateTRAPresumptiveTax(dailyTurnover) {
+export function assessPresumptiveEligibility(profile = {}) {
+  const missing = [];
+  if (!profile.legalForm) missing.push('legalForm');
+  if (profile.legalForm === 'individual' && !profile.residentStatus) missing.push('residentStatus');
+  if (profile.legalForm === 'individual' && !profile.exclusiveBusinessIncome) missing.push('exclusiveBusinessIncome');
+  if (!profile.records) missing.push('records');
+  if (profile.business === 'USAFIRI') missing.push('transportSchedule');
+  if (profile.legalForm && profile.legalForm !== 'individual') return { status: 'ineligible', missing, reason: copy('Makadirio haya ni ya mtu binafsi anayeweza kutumia mfumo wa kodi ya makadirio; ubia na kampuni hutumia njia tofauti.', 'This estimate is for an individual who may use the presumptive regime; partnerships and companies use different routes.') };
+  if (profile.residentStatus === 'no' || profile.exclusiveBusinessIncome === 'no') return { status: 'ineligible', missing, reason: copy('Majibu yako hayaendani na masharti ya mfumo wa kodi ya makadirio wa mtu binafsi.', 'Your answers do not match the conditions for the individual presumptive regime.') };
+  if (profile.business === 'USAFIRI') return { status: 'transport', missing, reason: copy('Usafiri wa abiria au mizigo una jedwali maalumu la TRA; mauzo ya siku pekee hayatoshi kufanya makadirio salama.', 'Passenger or goods transport uses a separate TRA schedule; daily sales alone are not enough for a safe estimate.') };
+  return { status: missing.length ? 'needs-info' : 'eligible', missing, reason: null };
+}
+
+export function calculateTRAPresumptiveTax(dailyTurnover, profile = {}) {
+  const rules = currentRules();
+  const bands = rules.presumptiveTax.bands;
   const annualTurnover = dailyTurnover * 365;
+  const eligibility = assessPresumptiveEligibility(profile);
   let annualTax = 0;
   let bracketInfo = '';
   let isExempt = false;
   let isOverLimit = false;
 
-  if (annualTurnover < 4000000) {
+  if (eligibility.status === 'transport' || eligibility.status === 'ineligible' || eligibility.status === 'needs-info') {
+    annualTax = null;
+    bracketInfo = eligibility.reason?.sw ?? 'Kamilisha muundo wa biashara, ukaazi, chanzo cha mapato na hali ya kumbukumbu kabla ya kuona mfano wa kodi.';
+  } else if (annualTurnover <= bands[0].upTo) {
     annualTax = 0;
     bracketInfo = 'Chini ya TSh 4 Million (Inasamehewa Kodi)';
     isExempt = true;
-  } else if (annualTurnover <= 7000000) {
-    annualTax = 100000;
-    bracketInfo = 'TSh 4M - 7M (Kiwango Maalum: TSh 100,000 kwa mwaka)';
-  } else if (annualTurnover <= 11000000) {
-    annualTax = 250000;
-    bracketInfo = 'TSh 7M - 11M (Kiwango Maalum: TSh 250,000 kwa mwaka)';
-  } else if (annualTurnover <= 100000000) {
-    annualTax = Math.round(annualTurnover * 0.035);
-    bracketInfo = 'TSh 11M - 100M (3.5% ya mauzo yote ya mwaka)';
+  } else if (annualTurnover <= bands[1].upTo) {
+    annualTax = profile.records === 'yes' ? Math.round((annualTurnover - 4_000_000) * 0.03) : bands[1].incompleteRecordsTax;
+    bracketInfo = profile.records === 'yes' ? 'TSh 4M - 7M (3% ya mauzo yanayozidi TSh 4M kwa kumbukumbu kamili)' : 'TSh 4M - 7M (TSh 100,000 kwa kumbukumbu zisizokamilika)';
+  } else if (annualTurnover <= bands[2].upTo) {
+    annualTax = profile.records === 'yes' ? Math.round(90_000 + (annualTurnover - 7_000_000) * 0.03) : bands[2].incompleteRecordsTax;
+    bracketInfo = profile.records === 'yes' ? 'TSh 7M - 11M (TSh 90,000 + 3% ya mauzo yanayozidi TSh 7M)' : 'TSh 7M - 11M (TSh 250,000 kwa kumbukumbu zisizokamilika)';
+  } else if (annualTurnover <= rules.presumptiveTax.annualTurnoverCap) {
+    annualTax = Math.round(annualTurnover * bands[3].incompleteRecordsRate);
+    bracketInfo = 'TSh 11M - 200M (4% ya mauzo yote ya mwaka kwa kumbukumbu zisizokamilika)';
   } else {
     annualTax = null;
-    bracketInfo = 'Zaidi ya TSh 100M: Biashara haiko kwenye kundi la Presumptive Tax.';
+    bracketInfo = 'Zaidi ya TSh 200M: Biashara haiko kwenye kundi la Presumptive Tax.';
     isOverLimit = true;
   }
 
   const quarterlyTax = annualTax !== null ? Math.round(annualTax / 4) : null;
-  const efdRequired = annualTurnover >= 14000000;
+  const efdRequired = annualTurnover >= rules.efd.annualTurnoverThreshold;
 
-  return { dailyTurnover, annualTurnover, annualTax, quarterlyTax, bracketInfo, isExempt, isOverLimit, efdRequired };
+  return { dailyTurnover, annualTurnover, annualTax, quarterlyTax, bracketInfo, isExempt, isOverLimit, efdRequired, eligibility, rulesetId: rules.id, rulesVerifiedAt: rules.appliesAsOf };
 }
 
 export function checkForFAQ(text) {
@@ -117,9 +167,16 @@ export function checkForFAQ(text) {
 
 export const SALES_ANNUAL_ESTIMATE = {
   belowOne: 700000,
-  oneToFive: 3000000,
-  fiveToTwenty: 12000000,
-  aboveTwenty: 36000000
+  oneToFour: 2_500_000,
+  fourToSeven: 5_500_000,
+  sevenToEleven: 9_000_000,
+  elevenToTwenty: 15_000_000,
+  twentyToHundred: 60_000_000,
+  hundredToTwoHundred: 150_000_000,
+  aboveTwoHundred: 240_000_000,
+  oneToFive: 3_000_000,
+  fiveToTwenty: 12_000_000,
+  aboveTwenty: 36_000_000
 };
 
 function estimatedAnnualTurnover(profile) {
@@ -127,16 +184,17 @@ function estimatedAnnualTurnover(profile) {
 }
 
 function flags(profile) {
+  const rules = currentRules();
   const registrations = profile.registrations ?? [];
   const sector = profile.business && profile.business !== 'OTHER' ? SECTORS[profile.business] : null;
   const annualEstimate = estimatedAnnualTurnover(profile);
   return {
     hasTin: registrations.includes('tin'),
     hasBusinessRegistration: registrations.includes('businessRegistration'),
-    hasLicence: registrations.includes('licence'),
+    hasLicence: registrations.includes('licence') && registrations.includes('tin'),
     sector,
     isNew: profile.stage === 'mpya',
-    efdLikelyRequired: (sector?.efdSensitive ?? true) && annualEstimate !== null && annualEstimate >= 14000000,
+    efdLikelyRequired: (sector?.efdSensitive ?? true) && annualEstimate !== null && annualEstimate >= rules.efd.annualTurnoverThreshold,
     annualEstimate
   };
 }
@@ -149,7 +207,8 @@ export function computeComplianceScore(profile) {
   const f = flags(profile);
   let completeness = 0;
   if (profile.business) completeness += 10;
-  if (profile.detail) completeness += 6;
+  if (profile.businessSubtype || profile.detail) completeness += 4;
+  if (profile.locationRegion && profile.locationArea) completeness += 2;
   if (profile.stage) completeness += 8;
   if (profile.sales) completeness += 8;
 
@@ -173,25 +232,25 @@ export function computeRisk(profile) {
   const notes = [];
   let score = 0;
 
-  if (!f.hasTin) {
+  if (!f.isNew && !f.hasTin) {
     score += 30;
     factors.push({ weight: 30, label: copy('Hakuna TIN iliyosajiliwa', 'No TIN registered on file') });
   }
-  if (!f.hasBusinessRegistration) {
+  if (!f.isNew && profile.legalForm !== 'individual' && !f.hasBusinessRegistration) {
     score += 20;
     factors.push({ weight: 20, label: copy('Usajili wa biashara haujakamilika', 'Business registration incomplete') });
   }
-  if (!f.hasLicence) {
+  if (!f.isNew && !f.hasLicence) {
     score += 15;
     factors.push({ weight: 15, label: copy('Leseni ya biashara haijathibitishwa', 'Business licence not confirmed') });
   }
-  if (profile.records !== 'yes') {
+  if (!f.isNew && profile.records === 'no') {
     score += 10;
     factors.push({ weight: 10, label: copy('Hakuna kumbukumbu za mauzo/matumizi', 'No sales/expense records kept') });
   }
   if (!f.isNew && profile.filedReturn !== 'yes') {
     score += 10;
-    factors.push({ weight: 10, label: copy('Bado hujawasilisha return', "Haven't filed a return yet") });
+    factors.push({ weight: 10, label: copy('Bado hujawasilisha ritani ya kodi', "Haven't filed a return yet") });
   }
   if (f.efdLikelyRequired && !f.hasTin) {
     score += 10;
@@ -200,14 +259,14 @@ export function computeRisk(profile) {
 
   if (f.efdLikelyRequired) {
     notes.push(copy(
-      'Kwa kiwango hiki cha mauzo, mashine ya EFD huenda inahitajika kisheria (kuanzia TSh Milioni 14/mwaka).',
-      'At this sales level, an EFD machine is likely legally required (threshold: TSh 14 Million/year).'
+      'Kwa kiwango hiki cha mauzo, mashine ya EFD/VFD huenda inahitajika (kiwango cha sasa kinachoonyeshwa na TRA: TSh Milioni 11 kwa mwaka).',
+      'At this sales level, an EFD/VFD may be required (current threshold shown by TRA: TSh 11 Million/year).'
     ));
   }
 
   score = Math.min(100, score);
   const level = score <= 25 ? 'low' : score <= 55 ? 'medium' : 'high';
-  return { score, level, factors, notes };
+  return { score, level, factors, notes, mode: f.isNew ? 'setup' : 'risk' };
 }
 
 // ---------------------------------------------------------------------------
@@ -218,21 +277,33 @@ export function getNextBestActions(profile) {
   const f = flags(profile);
   const queue = [];
 
+  if (!f.hasBusinessRegistration && ['partnership', 'company'].includes(profile.legalForm)) {
+    queue.push({
+      key: 'businessRegistration',
+      title: profile.legalForm === 'company' ? copy('Sajili kampuni BRELA', 'Incorporate the company with BRELA') : copy('Sajili ubia BRELA', 'Register the partnership with BRELA'),
+      time: copy('Muda hutegemea muundo na uhakiki wa BRELA', 'Timing depends on the structure and BRELA verification'),
+      reason: copy('Cheti cha BRELA na nyaraka za muundo hutumika kabla ya kuomba TIN ya taasisi.', 'The BRELA certificate and formation documents come before the entity TIN application.')
+    });
+  }
+
   if (!f.hasTin) {
     queue.push({
       key: 'tin',
       title: copy('Pata TIN', 'Get a TIN'),
-      time: copy('Takriban dakika 15', 'Around 15 minutes'),
+      time: copy('Muda hutegemea uhakiki wa TRA', 'Timing depends on TRA verification'),
       reason: copy('TIN ni hatua muhimu ya kuanza shughuli rasmi na kupata huduma zinazohusiana na biashara.', 'A TIN is an important step towards operating formally and accessing business services.')
     });
   }
-  if (!f.hasBusinessRegistration) {
+  if (!f.hasBusinessRegistration && profile.legalForm !== 'individual' && !['partnership', 'company'].includes(profile.legalForm)) {
     queue.push({
       key: 'businessRegistration',
       title: copy('Kamilisha usajili wa biashara', 'Complete business registration'),
       time: copy('Muda hutegemea aina ya biashara', 'Time varies by business type'),
       reason: copy('Usajili sahihi husaidia biashara yako kutambuliwa na kufuata hatua zinazohitajika.', 'Correct registration helps your business become recognised and follow required steps.')
     });
+  }
+  if (!f.hasBusinessRegistration && profile.legalForm === 'individual') {
+    queue.push({ key: 'businessRegistration', title: copy('Fikiria kusajili jina la biashara BRELA', 'Consider a BRELA business name'), time: copy('Hiari kwa jina la biashara la mtu binafsi', 'Optional for an individual business name'), reason: copy('Mtu binafsi anaweza kupata TIN bila kusajili jina la biashara, lakini jina la biashara linaweza kusaidia utambulisho rasmi.', 'An individual may obtain a TIN without a business name, but a registered name can support formal identity.') });
   }
   if (!f.hasLicence) {
     queue.push({
@@ -261,9 +332,9 @@ export function getNextBestActions(profile) {
   if (!f.isNew && profile.filedReturn !== 'yes') {
     queue.push({
       key: 'filedReturn',
-      title: copy('Jifunze kama kuna return inayokuhusu', 'Learn whether a return applies to you'),
+      title: copy('Angalia kama unatakiwa kuwasilisha ritani ya kodi', 'Learn whether a return applies to you'),
       time: copy('Dakika 10', '10 minutes'),
-      reason: copy('Kuwasilisha return kwa wakati husaidia kuepuka adhabu na kudumisha hali nzuri na TRA.', 'Filing on time helps you avoid penalties and stay in good standing with TRA.')
+      reason: copy('Kuwasilisha ritani ya kodi kwa wakati, inapohitajika, husaidia kuepuka adhabu na kutimiza wajibu wako kwa usahihi.', 'Filing on time helps you avoid penalties and stay in good standing with TRA.')
     });
   }
 
@@ -291,7 +362,7 @@ export function getJourney(profile) {
   const steps = [
     { key: 'profile', title: copy('Biashara imetambuliwa', 'Business identified'), description: copy('Umetoa maelezo ya msingi.', 'You shared essential details.'), done: true },
     { key: 'tin', title: copy('Pata TIN', 'Get a TIN'), description: copy('Hatua ya kuanza shughuli rasmi.', 'A step towards operating formally.'), done: f.hasTin },
-    { key: 'businessRegistration', title: copy('Kamilisha usajili wa biashara', 'Complete business registration'), description: copy('Kulingana na aina ya biashara yako.', 'Based on your business type.'), done: f.hasBusinessRegistration },
+    { key: 'businessRegistration', title: profile.legalForm === 'individual' ? copy('Jina la biashara BRELA (hiari)', 'BRELA business name (optional)') : copy('Kamilisha usajili BRELA', 'Complete BRELA registration'), description: copy('Kulingana na muundo wa biashara yako.', 'Based on your legal form.'), done: f.hasBusinessRegistration || profile.legalForm === 'individual' },
     { key: 'licence', title: copy('Angalia leseni inayohitajika', 'Check required licence'), description: copy('Baadhi ya biashara zinahitaji kibali maalumu.', 'Some businesses require a sector permit.'), done: f.hasLicence }
   ];
   if (f.efdLikelyRequired) {
@@ -308,14 +379,14 @@ export function getJourney(profile) {
 
 export function getBenefits(profile) {
   const f = flags(profile);
-  const lowSales = profile.sales === 'belowOne' || profile.sales === 'oneToFive';
-  const highSales = profile.sales === 'fiveToTwenty' || profile.sales === 'aboveTwenty';
+  const lowSales = ['belowOne','oneToFour','oneToFive'].includes(profile.sales);
+  const highSales = ['twentyToHundred','hundredToTwoHundred','aboveTwoHundred','aboveTwenty'].includes(profile.sales);
 
   const items = [
     {
       title: copy('Msamaha/kiwango maalum cha kodi ya makadirio', 'Presumptive tax exemption / flat rate'),
-      description: copy('Biashara ndogo zenye mauzo chini ya TSh 4M/mwaka hazitozwi kodi; zile hadi TSh 100M hulipa kiwango kilichowekwa.', 'Small businesses under TSh 4M/year owe no tax; those up to TSh 100M pay a set simplified rate.'),
-      status: profile.sales ? 'eligible' : 'explore'
+      description: copy('Biashara ndogo zenye mauzo chini ya TSh 4M/mwaka hazitozwi kodi; biashara zinazostahili hadi TSh 200M hutumia viwango vya mfumo wa kodi ya makadirio vinavyoonyeshwa na TRA.', 'Small businesses under TSh 4M/year owe no tax; qualifying businesses up to TSh 200M use the presumptive-tax rates currently shown by TRA.'),
+      status: profile.sales ? 'check' : 'explore'
     },
     {
       title: copy('Mwongozo wa usajili uliobinafsishwa', 'Personalised registration guidance'),
@@ -324,8 +395,8 @@ export function getBenefits(profile) {
     },
     {
       title: copy('Fursa za biashara mpya (hatua za awali)', 'New-business support (early stage)'),
-      description: copy('Baadhi ya taratibu rahisi na misaada ya mwanzo huweza kuwahusu wafanyabiashara wapya.', 'Some simplified procedures and early support may apply to first-time entrepreneurs.'),
-      status: f.isNew && lowSales ? 'eligible' : f.isNew ? 'check' : 'not-yet'
+      description: copy('Kuanzia 1 Julai 2026, mtu anayepata TIN kwa biashara kwa mara ya kwanza anaweza kuomba msamaha wa mwaka mmoja ikiwa makadirio ya mauzo yako ndani ya mfumo wa kodi ya makadirio na biashara itatumia mfumo huo pekee. TRA ndiyo huthibitisha.', 'From 1 July 2026, a first-time business TIN applicant may apply for one-year relief if projected turnover remains within the presumptive regime and the business operates exclusively under it. TRA makes the final decision.'),
+      status: f.isNew && lowSales && profile.firstBusinessTin === 'yes' ? 'check' : f.isNew ? 'explore' : 'not-yet'
     },
     {
       title: copy('Rasilimali za ukuaji wa biashara', 'Business growth resources'),
@@ -349,7 +420,7 @@ export function getBenefits(profile) {
 
 export function getTaxGuidance(profile) {
   const f = flags(profile);
-  const growth = profile.sales === 'fiveToTwenty' || profile.sales === 'aboveTwenty';
+  const growth = ['twentyToHundred','hundredToTwoHundred','aboveTwoHundred','aboveTwenty'].includes(profile.sales);
   return {
     summary: copy(
       'Huu ni muhtasari wa elimu wa kodi zinazoweza kuwa muhimu kwa biashara yako. Tathmini ya mwisho hutegemea hali halisi na sheria zinazotumika.',
@@ -366,19 +437,20 @@ export function getTaxGuidance(profile) {
         icon: '◇',
         title: copy('VAT', 'VAT'),
         body: growth
-          ? copy('Mauzo yanapokua, ni muhimu kukagua masharti ya usajili wa VAT na wajibu unaoweza kutokea.', 'As sales grow, it is important to check VAT registration conditions and any resulting obligations.')
-          : copy('Endelea kufuatilia mauzo yako; mahitaji yanaweza kubadilika kadri biashara inavyokua.', 'Keep tracking sales; requirements can change as the business grows.'),
+          ? copy('Fuatilia kiwango rasmi: zaidi ya TSh 200M ndani ya miezi 12 au TSh 100M ndani ya miezi 6. Watoa huduma za kitaalamu, shughuli za Serikali na wafanyabiashara wanaokusudia kuanza wana masharti ya ziada yanayoweza kutotegemea viwango hivyo.', 'Track the official thresholds: over TSh 200M in 12 months or TSh 100M in 6 months. Professional services, government economic activity and intending traders have additional conditions that may apply regardless of those thresholds.')
+          : copy('Endelea kufuatilia mauzo ya miezi 6 na 12; VAT pia ina masharti maalumu kwa baadhi ya shughuli hata kabla ya kiwango cha kawaida.', 'Keep tracking 6- and 12-month sales; VAT also has special conditions for some activities before the general threshold.'),
         action: copy('Kagua masharti rasmi ya VAT kabla ya kuchukua hatua.', 'Check official VAT conditions before acting.')
       },
       {
         icon: '▤',
         title: copy('EFD na kumbukumbu', 'EFD and records'),
         body: f.efdLikelyRequired
-          ? copy('Kiwango chako cha mauzo kinakaribia/kimezidi TSh 14M — huenda mashine ya EFD inahitajika.', 'Your sales level is near/above TSh 14M — an EFD machine may be required.')
+          ? copy('Kiwango chako cha mauzo kinakaribia/kimezidi TSh 11M — huenda EFD/VFD inahitajika; baadhi ya shughuli au maeneo yana masharti bila kutegemea kiwango hiki.', 'Your sales level is near/above TSh 11M — an EFD/VFD may be required; some activities or prime areas may have requirements regardless of this threshold.')
           : copy('Kumbukumbu husaidia kujua wajibu unaoweza kukuhusu na kuwasilisha taarifa kwa usahihi.', 'Records help you understand possible obligations and submit information accurately.'),
         action: copy('Anza na daftari la mauzo na matumizi.', 'Start with a sales and expense book.')
       }
-    ]
+    ].concat(profile.business === 'WAKALA' ? [{ icon: '%', title: copy('Makato ya kamisheni ya wakala', 'Agent commission withholding'), body: copy('TRA inaonyesha kiwango cha 10% kwa kamisheni za wakala wa huduma za fedha kwa simu zinazostahili.', 'TRA lists 10% withholding on qualifying mobile-money agent commissions.'), action: copy('Linganisha taarifa ya kamisheni na makato yaliyofanywa.', 'Compare your commission statement with tax withheld.') }] : [])
+      .concat(profile.employees === 'tenPlus' ? [{ icon: '👥', title: copy('PAYE na SDL', 'PAYE and SDL'), body: copy('Waajiri wanaweza kuwa na wajibu wa PAYE; TRA inaonyesha SDL ya 3.5% kwa mwajiri mwenye wafanyakazi 10 au zaidi, kulingana na masharti.', 'Employers may have PAYE duties; TRA shows SDL at 3.5% for an employer with 10 or more employees, subject to the rules.'), action: copy('Thibitisha mishahara, idadi ya wafanyakazi na tarehe za malipo.', 'Confirm payroll, employee count and payment dates.') }] : [])
   };
 }
 
@@ -456,19 +528,19 @@ export function getBusinessCheckup(profile = {}) {
   const improvements = [];
   const registrations = profile.registrations ?? [];
 
-  if (registrations.includes('tin')) completed.push(copy('TIN umeiweka kwenye wasifu', 'TIN recorded in your profile'));
+  if (registrations.includes('tin')) completed.push(copy('Umesema tayari una namba ya TIN', 'TIN recorded in your profile'));
   if (registrations.includes('businessRegistration')) completed.push(copy('Usajili wa biashara umewekwa', 'Business registration recorded'));
   if (registrations.includes('licence')) completed.push(copy('Leseni ya biashara umewekwa', 'Business licence recorded'));
   if (profile.records === 'yes') completed.push(copy('Unatunza kumbukumbu za biashara', 'You keep business records'));
   else improvements.push(copy('Anza kutunza kumbukumbu rahisi za mauzo na matumizi', 'Start keeping simple sales and expense records'));
 
-  if (profile.filedReturn === 'yes') completed.push(copy('Umesema umewahi kuwasilisha return', 'You indicated having filed a return before'));
-  else improvements.push(copy('Jifunze kama kuna return inayohusu hali yako', 'Learn whether a return applies to your situation'));
+  if (profile.filedReturn === 'yes') completed.push(copy('Umesema umewahi kuwasilisha ritani ya kodi', 'You indicated having filed a return before'));
+  else improvements.push(copy('Angalia kama unatakiwa kuwasilisha ritani ya kodi', 'Learn whether a return applies to your situation'));
 
   return {
     readiness: advisor.complianceScore,
     risk: advisor.risk,
-    completed: completed.length ? completed : [copy('Umeanza kufanya Business Checkup', 'Started the Business Checkup')],
+    completed: completed.length ? completed : [copy('Umeanza kuangalia hali ya biashara yako', 'Started the Business Checkup')],
     improvements,
     nextStep: advisor.actions[0]
   };

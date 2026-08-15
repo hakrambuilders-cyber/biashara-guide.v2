@@ -53,6 +53,7 @@ The **TRA Officer Console** (login simulation → National Analytics Overview, n
 - `brand.js` — the original logo mark (also copied into the officer console repo)
 - `engine/core.js` — the channel-agnostic brain: parsing, presumptive-tax calculator, compliance score, risk engine, next-best-action queue, journey, benefits, notice guidance, and the assistant's routing logic
 - `engine/knowledge.js` — static bilingual reference data (sectors, licensing notes, FAQs, notice copy) — the seed for the Tax-Law Registry described in the Functional Spec
+- `engine/regulatory.js` — the Version B prototype Regulatory Registry: active official-source-checked thresholds, ruleset metadata and internal update history
 - `engine/memory.js` — localStorage persistence for the Memory Engine
 - `engine/telemetry.js` — sends one anonymized profile event per session and one topic-only event per chat message to the shared Supabase database backing the officer console's live data mode
 - `styles.css` — design tokens, reset, and component styles for the citizen app
@@ -70,13 +71,13 @@ This repo is the source of truth for `engine/core.js`, `engine/knowledge.js`, an
 
 ## Presumptive tax calculator rules
 
-Based on annual turnover (daily sales × 365):
+Based on annual turnover (daily sales × 365) and the active Version B registry checked against current TRA operational pages on 12 August 2026. The prototype calculator uses the official table's incomplete-record column because the quick calculator does not yet establish whether records satisfy section 43 requirements:
 
 - Below TSh 4M → exempt.
 - TSh 4M – 7M → flat TSh 100,000/year.
 - TSh 7M – 11M → flat TSh 250,000/year.
-- TSh 11M – 100M → 3.5% of annual turnover.
-- Above TSh 100M → outside the presumptive-tax band.
-- At/above TSh 14M → an EFD machine is flagged as likely required.
+- TSh 11M – 200M → 4% of annual turnover where records are incomplete.
+- Above TSh 200M → outside the presumptive-tax band.
+- At/above TSh 11M → an EFD/VFD is flagged as likely required under current TRA guidance.
 
 The prototype gives broad preliminary guidance only. It does not make legal or tax determinations; official TRA requirements should always be verified before action.

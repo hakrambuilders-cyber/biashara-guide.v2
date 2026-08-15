@@ -102,6 +102,7 @@ A system that gives tax guidance is only as trustworthy as the process behind it
 - **Change control before publish.** No update to tax rules, thresholds, or guidance copy reaches users without a review step — see the Tax-Law Versioning workflow in [FUNCTIONAL_SPEC.md §11](./FUNCTIONAL_SPEC.md#11-tax-law-versioning). A wrong presumptive-tax bracket shown to thousands of businesses is a national-scale incident, not a typo.
 - **A visible effective date.** Every piece of guidance can answer "as of when is this true?" so a business acting on last year's guidance can be identified and corrected.
 - **A feedback loop from secondary users.** TRA officers and tax educators can flag guidance that confused or misled a citizen; those flags feed the review queue, not a black hole.
+- **Verify before presenting a change as complete.** Every prototype change must be re-checked in the actual citizen-facing journey and against the submitted proposal before it is presented for review. Factual, tax, licensing, regulatory, or eligibility claims must be re-verified against current authoritative Tanzanian sources rather than assumed from memory. If the visible build, source, proposal, and evidence do not agree, the change is not complete.
 
 ---
 

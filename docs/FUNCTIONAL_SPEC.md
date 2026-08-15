@@ -183,12 +183,13 @@ Logged, immutably, with a minimum retention appropriate to public-sector account
 
 ## 11. Tax-Law Versioning
 
-`engine/knowledge.js` today is a static module — correct for a single-law-version prototype, but a growth risk at scale: a change to the presumptive-tax brackets means editing and redeploying code. The Phase 1+ evolution:
+Version B now includes a prototype regulatory registry in `engine/regulatory.js`. The active presumptive-tax and EFD/VFD parameters are read from that single registry by the guidance engine; the Officer Console displays its source-verification and replacement history. It is deliberately not presented as a citizen-facing law-news feature. The Phase 1+ evolution is:
 
 1. Every fact (a bracket, a threshold, a licensing note) becomes a **KnowledgeEntry** with `value`, `sourceCitation`, `effectiveFrom`, `effectiveTo` (nullable), and `approvedBy`.
 2. The engine resolves "what's true" by querying the entry effective *as of the date guidance is being given* — this makes it possible to correctly re-explain historical guidance to a business that acted on last year's rules, per the Governance Model's "visible effective date" commitment.
 3. Publishing a new entry requires the Governance Model's review step (Product Constitution §9) before it becomes the active version — no silent edits.
-4. `engine/knowledge.js` remains the correct shape for local development and the offline/prototype mode; production points the same read interface at the versioned registry instead.
+4. `engine/regulatory.js` is the offline/prototype registry. Production points the same read interface at an authenticated registry where approval identity, publication state and audit history cannot be changed by client code.
+5. “Official-source verified” is not the same as “approved by TRA.” Real deployment requires authenticated TRA legal/content sign-off before an entry can become active.
 
 ---
 
@@ -233,9 +234,9 @@ Directional targets to design against, to be validated (and revised) with real p
 
 | Phase | Scope | What's true today |
 |---|---|---|
-| **Phase 0 — Prototype** | Web-only, client-side engine, self-reported profile, static Knowledge Engine | ✅ This repository |
+| **Phase 0 — Prototype** | Web-only, client-side engine, self-reported profile, versioned prototype Regulatory Registry | ✅ Active rules are centralized and the Officer Console shows update history; official-source verification is demonstrated, while real TRA approval workflow remains future integration |
 | **Phase 1 — Pilot** | Add a real backend session store, one additional channel (WhatsApp or USSD) using `channels/text-adapter.js` as the pattern, basic Analytics Engine (§12) | **Partially started** — minimal event-collection backend (Supabase) live, feeding the officer console real aggregate data for profile activity and chat topics; session store, WhatsApp/USSD channel, and full telemetry coverage (region, notices, benefits) still not started |
-| **Phase 2 — Expansion** | TRA integration interfaces (§5) replace self-report where available, call-centre console, Tax-Law Registry (§11) replaces static knowledge module, ML-assisted ranking (§4) | Not started |
+| **Phase 2 — Expansion** | TRA integration interfaces (§5) replace self-report where available, call-centre console, authenticated Tax-Law Registry replaces the client-side prototype registry, ML-assisted ranking (§4) | Not started |
 | **Phase 3 — National Scale** | Remaining channels (Android, SMS), multi-region DR posture if justified, full RBAC-backed officer tooling (§9) | Not started |
 
 Each phase is additive: no phase requires re-architecting what the previous phase shipped, because the channel-agnostic engine boundary (§2) was the very first decision made.
@@ -253,6 +254,7 @@ Reaffirming Product Constitution §12: this specification deliberately does not 
 | File | Spec section |
 |---|---|
 | `engine/knowledge.js` | §3.1 KnowledgeEntry (pre-versioning form), §11 |
+| `engine/regulatory.js` | §11 active regulatory parameters, official source references and replacement history |
 | `engine/core.js` | §2 Decision Engine, §4, Modules 3/6/7/8 |
 | `engine/memory.js` | §3.2 client-side tier, Module 9 |
 | `channels/text-adapter.js` | §2 architecture proof, §7 |
